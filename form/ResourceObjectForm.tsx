@@ -30,6 +30,7 @@ export interface ResourceObjectFormProps
   queryKey?: QueryKey;
   onSubmitSuccess?: (object: ResourceObject) => void;
   onSubmitError?: (error: Error) => void;
+  submitUrlPrefix?: string;
 }
 
 export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
@@ -37,6 +38,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
   private readonly queryKey: QueryKey | undefined;
   private readonly onSubmitSuccess?: (object: ResourceObject) => void;
   private readonly onSubmitError?: (error: Error) => void;
+  private readonly submitUrlPrefix?: string;
 
   constructor(props: ResourceObjectFormProps) {
     super(props);
@@ -47,6 +49,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
     this.onSubmitError = props.onSubmitError;
     this.queryClient = props.queryClient;
     this.queryKey = props.queryKey;
+    this.submitUrlPrefix = props.submitUrlPrefix;
   }
 
   setObject(newObject: ResourceObject | null) {
@@ -164,7 +167,9 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       return;
     }
     const saveDoc = createDocument(this.object);
-    const endpoint = ("/api/v1/" + this.object!.links!.self) as string;
+    const endpoint = this.submitUrlPrefix
+      ? ((this.submitUrlPrefix + this.object!.links!.self) as string)
+      : (this.object!.links!.self as string);
 
     (this.object.id == "" || this.object.id == undefined
       ? createResource(endpoint, saveDoc)

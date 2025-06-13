@@ -1,3 +1,5 @@
+[![CI Workflow](https://github.com/VloRyan/ts-jsonapi-form/actions/workflows/ci.workflow.yml/badge.svg)](https://github.com/VloRyan/ts-jsonapi-form/actions/workflows/ci.workflow.yml)
+
 # ts-jsonapi-form
 
 **js-jsonapi-form** is a TypeScript-based library that simplifies working with JSON:API `ResourceObject`s in React applications. It abstracts the request logic, error handling, and typing.
@@ -40,8 +42,8 @@ const Component = () => {
             {doc?.data.map((article) => (
                 <li key={article.id}>{article.attributes!!.title as string}</li>
             ))}
-    </ul>
-);
+        </ul>
+    );
 };
 ```
 

@@ -13,6 +13,7 @@ export interface useResourceObjectFormProps {
   onSubmit?: (object: ResourceObject) => void;
   queryKey?: QueryKey;
   submitResponseHandler?: SubmitResponseHandler;
+  submitUrlPrefix?: string;
 }
 
 export const useResourceObjectForm = (props: useResourceObjectFormProps) => {
@@ -24,6 +25,11 @@ export const useResourceObjectForm = (props: useResourceObjectFormProps) => {
     onSubmitSuccess: (obj: ResourceObject) => {
       if (props.submitResponseHandler) {
         props.submitResponseHandler.onSubmitSuccess(obj);
+      }
+    },
+    onSubmitError: (err: Error) => {
+      if (props.submitResponseHandler) {
+        props.submitResponseHandler.onSubmitError(err);
       }
     },
   });

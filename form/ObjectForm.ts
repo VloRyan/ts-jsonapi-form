@@ -4,7 +4,7 @@ import {
   ResourceIdentifierObject,
 } from "../jsonapi/model/Objects.ts";
 import { ObjectLike } from "../jsonapi/model/Types.ts";
-import { FormControlElement } from "./ResourceObjectForm.tsx";
+import { FormControlElement } from "./ResourceObjectForm.ts";
 
 import React, { ChangeEvent, Dispatch, FormEvent, useState } from "react";
 

@@ -14,9 +14,7 @@ import {
   settableValue,
   SingleObjectForm,
   SingleObjectFormProps,
-} from "./ObjectForm.tsx";
-import { QueryClient } from "@tanstack/react-query";
-import { QueryKey } from "@tanstack/query-core";
+} from "./ObjectForm.ts";
 import { FormEvent } from "react";
 
 export type FormControlElement =
@@ -26,29 +24,20 @@ export type FormControlElement =
 
 export interface ResourceObjectFormProps
   extends SingleObjectFormProps<ResourceObject> {
-  queryClient?: QueryClient;
-  queryKey?: QueryKey;
   onSubmitSuccess?: (object: ResourceObject) => void;
   onSubmitError?: (error: Error) => void;
   submitUrlPrefix?: string;
 }
 
 export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
-  private readonly queryClient: QueryClient | undefined;
-  private readonly queryKey: QueryKey | undefined;
   private readonly onSubmitSuccess?: (object: ResourceObject) => void;
   private readonly onSubmitError?: (error: Error) => void;
   private readonly submitUrlPrefix?: string;
 
   constructor(props: ResourceObjectFormProps) {
     super(props);
-    if (props.queryKey && !props.queryClient) {
-      throw Error("queryKey can not be set without queryClient");
-    }
     this.onSubmitSuccess = props.onSubmitSuccess;
     this.onSubmitError = props.onSubmitError;
-    this.queryClient = props.queryClient;
-    this.queryKey = props.queryKey;
     this.submitUrlPrefix = props.submitUrlPrefix;
   }
 
@@ -176,11 +165,6 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       : updateResource(endpoint, saveDoc)
     ).then(
       (value) => {
-        if (this.queryKey) {
-          this.queryClient!.invalidateQueries({
-            queryKey: this.queryKey,
-          }).then();
-        }
         if (this.onSubmitSuccess) {
           const doc = value as SingleResourceDoc;
           const newData = doc.data;

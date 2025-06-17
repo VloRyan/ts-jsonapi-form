@@ -1,8 +1,7 @@
-import { useSearch } from "wouter";
 import { ObjectLike } from "../jsonapi/model/Types.ts";
 
 export const useFilter = () => {
-  const search = useSearch();
+  const search = window.location.search;
   const filter: ObjectLike = {};
   if (!search) {
     return filter;

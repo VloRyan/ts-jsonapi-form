@@ -2,7 +2,7 @@ import {
   buildQueryString,
   fetchResource,
   MEDIA_TYPE,
-  opts,
+  FetchOpts,
 } from "./JsonApi.ts";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
@@ -94,13 +94,13 @@ describe("fetchResource", () => {
 });
 
 test.each([
-  [{} satisfies opts, ""],
+  [{} satisfies FetchOpts, ""],
   [
     {
       filter: { name: "test" },
       page: { offset: 1, limit: 10 },
       includes: ["success"],
-    } satisfies opts,
+    } satisfies FetchOpts,
     "?page[offset]=1&page[limit]=10&filter[name]=test&include=success",
   ],
 ])("buildQueryString(%o) -> %s", (opts, expected) => {

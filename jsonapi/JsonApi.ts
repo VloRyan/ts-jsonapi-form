@@ -6,14 +6,14 @@ import { ObjectLike } from "./model/Types.ts";
 
 export const MEDIA_TYPE = "application/vnd.api+json";
 
-export interface opts {
-  page?: page;
+export interface FetchOpts {
+  page?: Page;
   filter?: object;
   includes?: string[];
   sort?: string;
 }
 
-export interface page {
+export interface Page {
   limit: number | undefined;
   offset: number | undefined;
 }
@@ -45,11 +45,11 @@ async function callApi(method: string, url: string, body?: APIDocument) {
   });
 }
 
-export async function fetchResource(url: string, opts?: opts) {
+export async function fetchResource(url: string, opts?: FetchOpts) {
   return await callApi("GET", url + buildQueryString(opts));
 }
 
-export async function deleteResource(url: string, opts?: opts) {
+export async function deleteResource(url: string, opts?: FetchOpts) {
   return callApi("DELETE", url + buildQueryString(opts));
 }
 
@@ -61,7 +61,7 @@ export async function updateResource(url: string, body: APIDocument) {
   return callApi("PATCH", url, body);
 }
 
-export function buildQueryString(opts?: opts) {
+export function buildQueryString(opts?: FetchOpts) {
   const query: string[] = [];
   if (opts != undefined) {
     pushObject(query, opts.page, "page");
@@ -139,5 +139,5 @@ export function toParamFamily(name: string, o: ObjectLike): string {
     }
     params += `${name}[` + k + "]=" + o[k];
   }
-  return params.length > 0 ? "?" + params : "";
+  return params;
 }

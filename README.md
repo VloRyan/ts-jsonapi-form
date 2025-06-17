@@ -18,48 +18,35 @@ TBD
 
 ## 🚀 Usage
 
-You can use the provided hooks like `useResources` to fetch typed data from a JSON:API endpoint.  
-The hook returns:
+For fetching resources according to this request
 
-```ts
-import { useResources } from "ts-jsonapi-form/hooks/UseResource.ts";
-
-const Component = () => {
-    const { doc, isLoading, error, queryKey } = useResources("/api/articles", {
-        includes: ["author"],
-        filter: { published: true },
-    });
-
-    if (isLoading) {
-        return <p>Loading</p>;
-    }
-    if (error) {
-        return <p>Error: {error.message}</p>;
-    }
-
-    return (
-        <ul>
-            {doc?.data.map((article) => (
-                <li key={article.id}>{article.attributes!!.title as string}</li>
-            ))}
-        </ul>
-    );
-};
+```http request
+GET /articles/1?filter[name]=ts-jsonapi-form&include=comments HTTP/1.1
+Accept: application/vnd.api+json
 ```
 
-- `doc`: a fully typed JSON:API document based on your TypeScript definitions
-- `isLoading`: a boolean indicating the loading state
-- `error`: any error encountered during the request
-- `queryKey`: the unique cache key used by TanStack Query
+you can do the following
+
+```ts
+import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi.ts";
+
+fetchResource("http://example.com/articles", {
+  filter: { name: "ts-jsonapi-form" },
+  includes: ["comments"],
+})
+  .then((doc) => {
+    console.log(doc);
+  })
+  .catch((err) => err.message);
+```
+
+- `doc`: a fully typed [JSON:API document](https://jsonapi.org/format/#document-structure)
 
 This allows you to build dynamic, API-driven forms and interfaces with minimal boilerplate.
 
 ## 🛠 Technologies
 
 - **TypeScript** – for robust typing and type-safe APIs
-- **React** – for building modern UI components
-- **@tanstack/react-query** – for data fetching, caching, and reactivity
-- **Wouter** – a minimal routing library for React
 
 ## 📌 Project Status
 

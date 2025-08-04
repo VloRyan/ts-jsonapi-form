@@ -8,7 +8,7 @@ export const MEDIA_TYPE = "application/vnd.api+json";
 
 export interface FetchOpts {
   page?: Page;
-  filter?: object;
+  filter?: ObjectLike;
   includes?: string[];
   sort?: string;
 }

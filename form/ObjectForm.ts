@@ -134,7 +134,7 @@ export class SingleObjectForm<T> implements ObjectForm {
     const target = event.currentTarget as HTMLInputElement;
     const value = target.type === "checkbox" ? target.checked : target.value;
     const name = target.name;
-    if (target.type == "select-one" && !value) {
+    if (target.type == "date" && !value) {
       this.removeValue(name);
       return;
     }

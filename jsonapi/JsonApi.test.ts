@@ -6,8 +6,8 @@ import {
 } from "./JsonApi.ts";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
-import { SingleResourceDoc } from "./model/Document.ts";
-import { ApiError } from "./model/ApiError.ts";
+import { SingleResourceDoc } from "./model/";
+import { ApiError } from "./model/";
 
 describe("fetchResource", () => {
   beforeEach(() => {

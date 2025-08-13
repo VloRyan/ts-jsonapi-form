@@ -1,4 +1,4 @@
-import { ObjectLike } from "../jsonapi/model/Types.ts";
+import { ObjectLike } from "../jsonapi/model/";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getValue = (obj: any, path: string) => {
@@ -10,7 +10,19 @@ export const setValue = (obj: any, path: string, value: any) => {
   const parts = splitPath(path);
   const attribName = parts[parts.length - 1];
   if (parts.length == 1) {
-    obj[attribName] = value;
+    const arrStart = attribName.indexOf("[");
+    if (arrStart > -1) {
+      const elemIdx = +attribName.substring(
+        arrStart + 1,
+        attribName.indexOf("]"),
+      );
+      const fieldName = attribName.substring(0, arrStart);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const field: any = findField(obj, fieldName) as [];
+      field[elemIdx] = value;
+    } else {
+      obj[attribName] = value;
+    }
   } else {
     const objPath = parts.slice(0, parts.length - 1);
     const arrStart = attribName.indexOf("[");
@@ -77,11 +89,11 @@ export const findField = (obj: any, path: string | string[]) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let result: any;
   if (!obj) {
-    return result;
+    return undefined;
   }
   splitPath(path).forEach((part, index, array) => {
     if (obj === undefined) {
-      return null;
+      return undefined;
     }
     let elemIdx = "";
     const arrStart = part.indexOf("[");
@@ -93,7 +105,7 @@ export const findField = (obj: any, path: string | string[]) => {
     if (index === array.length - 1) {
       const partValue = getValueFrom(obj, part);
       if (partValue === undefined) {
-        result = null;
+        result = undefined;
       } else {
         if (elemIdx !== "") {
           result = getValueFrom(partValue, elemIdx);
@@ -101,11 +113,11 @@ export const findField = (obj: any, path: string | string[]) => {
           result = partValue;
         }
       }
-      return null;
+      return undefined;
     }
     if (elemIdx !== "") {
       if (partValue === undefined) {
-        result = null;
+        result = undefined;
       } else {
         obj = getValueFrom(partValue, elemIdx);
       }
@@ -118,6 +130,9 @@ export const findField = (obj: any, path: string | string[]) => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getValueFrom(obj: any, key: string) {
+  if (key == "") {
+    return obj;
+  }
   if (obj instanceof Map) {
     return obj.get(key);
   }

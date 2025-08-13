@@ -1,8 +1,12 @@
-import { Document as APIDocument, Included } from "./model/Document.ts";
-import { ApiError } from "./model/ApiError.ts";
+import {
+  Document as APIDocument,
+  Included,
+  ApiError,
+  ResourceIdentifierObject,
+  ResourceObject,
+  ObjectLike,
+} from "./model/";
 import { StatusCodes } from "http-status-codes";
-import { ResourceIdentifierObject, ResourceObject } from "./model/Objects.ts";
-import { ObjectLike } from "./model/Types.ts";
 
 export const MEDIA_TYPE = "application/vnd.api+json";
 

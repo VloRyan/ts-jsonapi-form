@@ -10,7 +10,8 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "http-status-codes": "^2.3.0"
+    "http-status-codes": "^2.3.0",
+    "react": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

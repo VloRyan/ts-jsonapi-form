@@ -1,7 +1,16 @@
 {
   "name": "ts-jsonapi-form",
   "version": "0.0.0",
+  "author": "VloRyan",
   "type": "module",
+  "homepage": "https://github.com/VloRyan/ts-jsonapi-form#readme",
+  "bugs": {
+    "url": "https://github.com/VloRyan/ts-jsonapi-form/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VloRyan/ts-jsonapi-form.git"
+  },
   "scripts": {
     "build": "tsc",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",

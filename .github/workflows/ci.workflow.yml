@@ -17,4 +17,4 @@ jobs:
       - name: Lint
         run: npm run lint
       - name: Check fmt
-        run: npx prettier . --check
+        run: npm run fmt

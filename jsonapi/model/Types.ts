@@ -10,7 +10,17 @@ export type Value = Primitive | ObjectLike | Arr;
 
 export type MetaObject = ObjectLike;
 
-export type Link = string | { href: string; meta?: MetaObject };
+export type Link = string | LinkObject | null;
+
+export type LinkObject = {
+  href: string;
+  rel?: string;
+  describedby?: Link;
+  title?: string;
+  type?: string;
+  hreflang?: string;
+  meta?: MetaObject;
+};
 
 export interface ImplementationInfo {
   version?: string;

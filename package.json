@@ -1,27 +1,38 @@
 {
-  "name": "ts-jsonapi-form",
-  "version": "0.0.0",
+  "name": "@vloryan/ts-jsonapi-form",
+  "version": "0.0.1",
+  "author": "VloRyan",
   "type": "module",
+  "homepage": "https://github.com/VloRyan/ts-jsonapi-form#readme",
+  "bugs": {
+    "url": "https://github.com/VloRyan/ts-jsonapi-form/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VloRyan/ts-jsonapi-form.git"
+  },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
-    "fmt": "prettier . --write",
+    "lint": "eslint . --config=./eslint.config.mts --report-unused-disable-directives --max-warnings 0",
+    "fmt": "prettier **/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,yml,yaml} --check --no-error-on-unmatched-pattern",
+    "fmt-write": "prettier **/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,yml,yaml} --write --no-error-on-unmatched-pattern",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "http-status-codes": "^2.3.0"
+    "http-status-codes": "^2.3.0",
+    "react": "^19.1.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.29.0",
+    "@eslint/js": "^9.33.0",
     "@types/react": "^19.1.8",
     "@vitest/coverage-v8": "^3.2.3",
-    "eslint": "^9.29.0",
+    "eslint": "^9.33.0",
     "jiti": "^2.4.2",
     "jsdom": "^26.1.0",
     "prettier": "3.1.1",
     "typescript": "~5.8.3",
-    "typescript-eslint": "^8.34.1",
+    "typescript-eslint": "^8.39.1",
     "vitest": "^3.2.3",
     "vitest-fetch-mock": "^0.3.0"
   }

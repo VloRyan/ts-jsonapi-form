@@ -1,9 +1,9 @@
 import { MetaObject } from "./Types.ts";
-import { Links } from "./Links.ts";
+import { LinksObject } from "./Links.ts";
 
 export interface ErrorObject {
   id?: number | string;
-  links?: Links;
+  links?: LinksObject;
   status?: string;
   code?: string;
   title?: string;

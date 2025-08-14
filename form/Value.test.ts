@@ -58,6 +58,14 @@ describe("removeField", () => {
       nested: [{ field: "1" }, { field: "3" }],
     });
   });
+
+  it("should throw descriptive error on wrong path", () => {
+    const obj = { field: "test" };
+
+    expect(() => removeField(obj, "name[0]")).toThrowError(
+      "field under 'name[0]' is not an array",
+    );
+  });
 });
 
 describe("splitPath", () => {

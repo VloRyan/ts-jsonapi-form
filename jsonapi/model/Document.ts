@@ -5,10 +5,10 @@ import { ResourceObject } from "./Objects.ts";
 
 export interface Document<T extends PrimaryData = PrimaryData> {
   jsonapi?: ImplementationInfo;
-  links: Links | PaginationLinks;
-  meta: MetaObject;
-  errors: Errors;
-  data: T;
+  links?: Links | PaginationLinks;
+  meta?: MetaObject;
+  errors?: Errors;
+  data?: T;
   included?: Included;
 }
 
@@ -23,16 +23,17 @@ export type CollectionResourceDoc = DocWithData<Array<ResourceObject>>;
 
 export type Included = ResourceObject[];
 
-export type PrimaryData = ResourceObject | Array<ResourceObject>;
+export type PrimaryData = ResourceObject | Array<ResourceObject> | null;
 
 export type Errors = ErrorObject[];
 
-export function createDocument(data: ResourceObject | ResourceObject[]) {
-  const doc: Document = {
+export function createDocument(
+  data: ResourceObject | ResourceObject[],
+  included?: Included,
+) {
+  const doc: DocWithData = {
     data: data,
-    errors: [],
-    links: {},
-    meta: {},
+    included: included,
   };
   return doc;
 }

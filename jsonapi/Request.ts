@@ -1,4 +1,4 @@
-import { ObjectLike } from "./model/Types.ts";
+import { ObjectLike } from "./model/";
 import { FetchOpts, Page } from "./JsonApi.ts";
 
 export const extractFilter = (search: string) => {

@@ -1,10 +1,10 @@
 import { Links, LinksObject } from "./Links.ts";
-import { MetaObject, Value } from "./Types.ts";
+import { MetaObject, ObjectLike, Value } from "./Types.ts";
 
 export interface ResourceIdentifierObject {
   id: string;
-  lid?: string;
   type: string;
+  lid?: string;
 }
 
 export type ResourceLinkage =
@@ -14,9 +14,9 @@ export type ResourceLinkage =
   | ResourceIdentifierObject[];
 
 export interface RelationshipObject {
-  meta: MetaObject;
   data: ResourceLinkage;
-  links: Links;
+  meta?: MetaObject;
+  links?: Links;
 }
 
 export interface RelationshipsObject {
@@ -25,12 +25,16 @@ export interface RelationshipsObject {
 
 export interface ResourceObject {
   id: string;
-  lid?: string;
   type: string;
+  lid?: string;
   attributes?: AttributesObject;
   relationships?: RelationshipsObject;
   links?: LinksObject;
-  meta: MetaObject;
+  meta?: MetaObject;
+}
+
+export function isResourceObject(obj: ObjectLike) {
+  return obj["id"] !== undefined && obj["type"] !== undefined;
 }
 
 export type AttributesObject<

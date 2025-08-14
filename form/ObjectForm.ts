@@ -23,10 +23,10 @@ export type settableValue =
 export interface ObjectForm {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue(path: string): any;
-
   setValue(path: string, value: settableValue): void;
-
   removeValue(path: string): void;
+
+  onChangePath(exp: RegExp, callback: () => void | null): void;
 
   handleChange(event: ChangeEvent<FormControlElement>): void;
 
@@ -50,18 +50,23 @@ export interface SingleObjectFormProps<T> {
   onChange?: (object: T | null, path: string) => void;
   onSubmit?: (object: T) => void;
 }
-
+export interface ChangePathHandler {
+  expression: RegExp;
+  callback: () => void;
+}
 export class SingleObjectForm<T> implements ObjectForm {
   object: T | null;
   id: string | undefined;
   protected readonly onChange?: (object: T | null, path: string) => void;
   protected readonly onSubmit?: (object: T) => void;
+  protected onChangePathHandler: ChangePathHandler[];
 
   constructor(props: SingleObjectFormProps<T>) {
     this.id = props.id;
     this.object = props.object;
     this.onChange = props.onChange;
     this.onSubmit = props.onSubmit;
+    this.onChangePathHandler = [] satisfies ChangePathHandler[];
   }
 
   setup(): {
@@ -101,6 +106,19 @@ export class SingleObjectForm<T> implements ObjectForm {
     this.fireChanged(path);
   };
 
+  onChangePath = (exp: RegExp, callback: () => void | null) => {
+    if (callback !== null) {
+      this.onChangePathHandler = this.onChangePathHandler.filter(
+        (handler) => handler.expression.source !== exp.source,
+      );
+      this.onChangePathHandler.push({ expression: exp, callback });
+    } else {
+      this.onChangePathHandler = this.onChangePathHandler.filter(
+        (handler) => handler.expression.source !== exp.source,
+      );
+    }
+  };
+
   handleChange = (event: ChangeEvent<FormControlElement>) => {
     const target = event.currentTarget as HTMLInputElement;
     const value = target.type === "checkbox" ? target.checked : target.value;
@@ -137,6 +155,11 @@ export class SingleObjectForm<T> implements ObjectForm {
     if (this.onChange) {
       this.onChange(this.object, path);
     }
+    this.onChangePathHandler.forEach((handler) => {
+      if (handler.expression.test(path)) {
+        handler.callback();
+      }
+    });
   }
 }
 
@@ -203,6 +226,9 @@ export class OffsetForm implements ObjectForm {
     }
     this.form.setValue(this.offset + path, value);
   };
+  onChangePath(exp: RegExp, callback: () => void) {
+    this.form.onChangePath(exp, callback);
+  }
 
   setup = (): {
     id: string | undefined;

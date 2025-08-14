@@ -161,7 +161,11 @@ export const removeField = (obj: any, path: string) => {
     fieldName = fieldName.substring(0, arrStart);
   }
   if (elemIdx != "") {
-    parentObj[fieldName].splice(elemIdx, 1);
+    const arr = fieldName.length === 0 ? parentObj : parentObj[fieldName];
+    if (!Array.isArray(arr)) {
+      throw new Error(`field under '${path}' is not an array`);
+    }
+    arr.splice(+elemIdx, 1);
   } else {
     delete parentObj[fieldName];
   }

@@ -265,6 +265,9 @@ describe("removeValue", () => {
     form.removeValue("name");
     expect(testDoc.data.attributes.name).toBe(undefined);
 
+    form.removeValue("races[0]");
+    expect(testDoc.data.attributes.races).toEqual(["DeathRace 3000"]);
+
     form.removeValue("components.tires");
     expect(testDoc.data.attributes.components.tires).toBe(undefined);
   });
@@ -294,6 +297,10 @@ describe("removeValue", () => {
 
     form.removeValue("passengers[0].name");
     expect(testDoc.included[2].attributes!["name"]).toBeUndefined();
+
+    form.removeValue("passengers[0]");
+    expect(testDoc.data.relationships.passengers).toEqual({ data: [] });
+    expect(testDoc.included[2]).toBeUndefined();
   });
 
   it("should set relationship to NULL and remove included", () => {
@@ -334,6 +341,7 @@ describe("removeValue", () => {
     expect(changedPath).toBe("driver.id");
   });
 });
+
 describe("getLink", () => {
   it("should return link", () => {
     const form = new ResourceObjectForm({

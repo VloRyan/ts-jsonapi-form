@@ -1,22 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { FetchOpts, Page } from "./JsonApi.ts";
-import { extractFilter, extractPage, extractFetchOpts } from "./Request.ts";
-import { ObjectLike } from "./model/Types.ts";
-describe("extractFilter", () => {
-  it("should return default filter on empty query", async () => {
-    const expectedFilter = {} satisfies ObjectLike;
+import { FetchOpts, Page } from "./";
+import { extractFetchOpts, extractFilter, extractPage } from "./Request.ts";
+import { ObjectLike } from "./model/";
 
+describe("extractFilter", () => {
+  it("should return undefined on empty query", async () => {
     const filter = extractFilter("");
 
-    expect(filter).toEqual(expectedFilter);
+    expect(filter).toEqual(undefined);
   });
 
-  it("should return default filter on filter query", async () => {
-    const expectedFilter = {} satisfies ObjectLike;
+  it("should return undefined on query without filter", async () => {
+    const filter = extractFilter("test=true&another=false");
 
-    const filter = extractFilter("field=1&field[a]=1");
-
-    expect(filter).toEqual(expectedFilter);
+    expect(filter).toEqual(undefined);
   });
 
   it("should return filter fields on valid query", async () => {
@@ -64,7 +61,7 @@ describe("extractPage", () => {
 });
 
 const defaultOps = {
-  filter: {},
+  filter: undefined,
   includes: undefined,
   page: undefined,
   sort: undefined,

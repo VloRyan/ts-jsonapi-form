@@ -86,7 +86,7 @@ function pushObject(arr: Array<string>, obj: any, name: string) {
     return;
   }
   if (typeof obj === "string" || obj instanceof String) {
-    arr.push(name + "=" + obj);
+    arr.push(name + "=" + encodeURIComponent(obj as string));
     return;
   }
   for (const key in obj) {
@@ -94,7 +94,7 @@ function pushObject(arr: Array<string>, obj: any, name: string) {
     if (!v) {
       continue;
     }
-    arr.push(name + "[" + key + "]=" + v);
+    arr.push(name + "[" + key + "]=" + encodeURIComponent(v));
   }
 }
 

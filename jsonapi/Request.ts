@@ -12,7 +12,7 @@ export const extractFilter = (search: string) => {
     .forEach((value) => {
       const parts = value.split("=");
       const name = parts[0].substring("filter[".length, parts[0].length - 1);
-      filter[name] = parts[1];
+      filter[name] = decodeURIComponent(parts[1]);
     });
   return Object.keys(filter).length === 0 ? undefined : filter;
 };

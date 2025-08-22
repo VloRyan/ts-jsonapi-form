@@ -26,6 +26,16 @@ describe("extractFilter", () => {
 
     expect(filter).toEqual(expectedFilter);
   });
+
+  it("should return decoded filter fields on valid query with encoded uri", async () => {
+    const expectedFilter = {
+      fieldA: "C&A",
+    } satisfies ObjectLike;
+
+    const filter = extractFilter("filter[fieldA]=C%26A");
+
+    expect(filter).toEqual(expectedFilter);
+  });
 });
 
 describe("extractPage", () => {

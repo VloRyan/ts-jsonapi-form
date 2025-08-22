@@ -3,8 +3,8 @@ import {
   Included,
   ApiError,
   ResourceIdentifierObject,
-  ResourceObject,
   ObjectLike,
+  isSameId,
 } from "./model/";
 import { StatusCodes } from "http-status-codes";
 
@@ -113,35 +113,9 @@ export function InvalidServerResponseError(response: Response) {
 
 export function findInclude(id: ResourceIdentifierObject, includes: Included) {
   for (const obj of includes) {
-    if (obj.id === id.id && obj.type === id.type) {
+    if (isSameId(obj, id)) {
       return obj;
     }
   }
   return null;
-}
-
-export function findIncludes(
-  ids: ResourceIdentifierObject[],
-  includes: Included,
-) {
-  const result: ResourceObject[] = [];
-  for (const obj of includes) {
-    for (const id of ids) {
-      if (obj.id === id.id && obj.type === id.type) {
-        result.push(obj);
-      }
-    }
-  }
-  return result;
-}
-
-export function toParamFamily(name: string, o: ObjectLike): string {
-  let params = "";
-  for (const k in o) {
-    if (params.length > 0) {
-      params += "&";
-    }
-    params += `${name}[` + k + "]=" + o[k];
-  }
-  return params;
 }

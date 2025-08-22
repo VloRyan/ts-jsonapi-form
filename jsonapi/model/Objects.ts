@@ -34,7 +34,17 @@ export interface ResourceObject {
 }
 
 export function isResourceObject(obj: ObjectLike) {
-  return obj["id"] !== undefined && obj["type"] !== undefined;
+  return (
+    obj["type"] !== undefined &&
+    (obj["id"] !== undefined || obj["lid"] !== undefined)
+  );
+}
+
+export function isSameId(
+  a: ResourceObject | ResourceIdentifierObject,
+  b: ResourceObject | ResourceIdentifierObject,
+) {
+  return a.type === b.type && a.id === b.id && a.lid === b.lid;
 }
 
 export type AttributesObject<

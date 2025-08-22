@@ -1,13 +1,19 @@
 import {
   buildQueryString,
-  fetchResource,
-  MEDIA_TYPE,
   FetchOpts,
+  fetchResource,
+  findInclude,
+  MEDIA_TYPE,
 } from "./JsonApi.ts";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
-import { SingleResourceDoc } from "./model/";
-import { ApiError } from "./model/";
+import {
+  ApiError,
+  Included,
+  ResourceIdentifierObject,
+  ResourceObject,
+  SingleResourceDoc,
+} from "./model/";
 
 describe("fetchResource", () => {
   beforeEach(() => {
@@ -107,4 +113,70 @@ test.each([
   const got = buildQueryString(opts);
 
   expect(got).toBe(expected);
+});
+
+describe("findInclude", () => {
+  it("should return include by id and type", async () => {
+    const id = {
+      id: "4711",
+      type: "testType",
+    } satisfies ResourceIdentifierObject;
+    const expected: ResourceObject = { id: "4711", type: "testType" };
+    const includes: Included = [
+      { id: "4711", type: "other" },
+      { id: "4712", type: "testType" },
+      expected,
+    ];
+
+    expect(findInclude(id, includes)).toBe(expected);
+  });
+
+  it("should return include by lid and type", async () => {
+    const id = {
+      id: "",
+      lid: "4711",
+      type: "testType",
+    } satisfies ResourceIdentifierObject;
+    const expected: ResourceObject = { id: "", lid: "4711", type: "testType" };
+    const includes: Included = [
+      { id: "4711", lid: "4711", type: "other" },
+      { id: "", lid: "4712", type: "testType" },
+      expected,
+    ];
+
+    expect(findInclude(id, includes)).toBe(expected);
+  });
+});
+
+describe("findIncludes", () => {
+  it("should return include by id and type", async () => {
+    const id = {
+      id: "4711",
+      type: "testType",
+    } satisfies ResourceIdentifierObject;
+    const expected: ResourceObject = { id: "4711", type: "testType" };
+    const includes: Included = [
+      { id: "4711", type: "other" },
+      { id: "4712", type: "testType" },
+      expected,
+    ];
+
+    expect(findInclude(id, includes)).toBe(expected);
+  });
+
+  it("should return include by lid and type", async () => {
+    const id = {
+      id: "",
+      lid: "4711",
+      type: "testType",
+    } satisfies ResourceIdentifierObject;
+    const expected: ResourceObject = { id: "", lid: "4711", type: "testType" };
+    const includes: Included = [
+      { id: "4711", lid: "4711", type: "other" },
+      { id: "", lid: "4712", type: "testType" },
+      expected,
+    ];
+
+    expect(findInclude(id, includes)).toBe(expected);
+  });
 });

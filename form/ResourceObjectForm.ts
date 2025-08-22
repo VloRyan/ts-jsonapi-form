@@ -3,6 +3,7 @@ import {
   createDocument,
   Included,
   isResourceObject,
+  isSameId,
   ObjectLike,
   RelationshipObject,
   RelationshipsObject,
@@ -310,11 +311,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       }
       if (Array.isArray(otherRel.data)) {
         for (const otherIdentifier of otherRel.data) {
-          if (
-            otherIdentifier.type == id.type &&
-            otherIdentifier.id == id.id &&
-            otherIdentifier.lid == id.lid
-          ) {
+          if (isSameId(otherIdentifier, id)) {
             refCount++;
             if (refCount > 1) {
               break;
@@ -323,11 +320,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
         }
       } else {
         const otherIdentifier = otherRel.data as ResourceIdentifierObject;
-        if (
-          otherIdentifier.type == id.type &&
-          otherIdentifier.id == id.id &&
-          otherIdentifier.lid == id.lid
-        ) {
+        if (isSameId(otherIdentifier, id)) {
           refCount++;
           if (refCount > 1) {
             break;
@@ -489,11 +482,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       return -1;
     }
     for (let i = 0; i < this.doc.included.length; i++) {
-      if (
-        this.doc.included[i].type === id.type &&
-        this.doc.included[i].id === id.id &&
-        this.doc.included[i].lid === id.lid
-      ) {
+      if (isSameId(this.doc.included[i], id)) {
         return i;
       }
     }

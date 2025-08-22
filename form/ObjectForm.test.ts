@@ -208,17 +208,17 @@ describe("handleChange", () => {
     const form = new SingleObjectForm({
       object: testObject,
     });
-    const newValue = Date.parse("2025-01-01T12:01:00Z");
+    const newValue = "2025-01-01T12:01:00Z";
 
     form.handleChange({
       currentTarget: {
         type: "date",
         name: "date",
-        valueAsDate: newValue,
+        value: newValue,
       },
     } as unknown as ChangeEvent<FormControlElement>);
 
-    expect(testObject.date).toBe(newValue);
+    expect(testObject.date).toEqual(new Date(newValue));
   });
 
   it("setValue from check value", () => {

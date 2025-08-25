@@ -2,19 +2,19 @@ import { ObjectLike } from "./model/";
 import { FetchOpts, Page } from "./JsonApi.ts";
 
 export const extractFilter = (search: string) => {
-  const filter: ObjectLike = {};
   if (!search) {
-    return filter;
+    return undefined;
   }
+  const filter: ObjectLike = {};
   search
     .split("&")
     .filter((value) => value.startsWith("filter["))
     .forEach((value) => {
       const parts = value.split("=");
       const name = parts[0].substring("filter[".length, parts[0].length - 1);
-      filter[name] = parts[1];
+      filter[name] = decodeURIComponent(parts[1]);
     });
-  return filter;
+  return Object.keys(filter).length === 0 ? undefined : filter;
 };
 
 export function extractPage(search: string): Page | undefined {
@@ -35,10 +35,20 @@ export function extractPage(search: string): Page | undefined {
 
 export const extractFetchOpts = (search: string, init?: FetchOpts) => {
   const urlParams = new URLSearchParams(search);
-  return {
-    page: init?.page ? init.page : extractPage(search),
-    filter: init?.filter ? init.filter : extractFilter(search),
-    sort: urlParams.get("sort") ?? init?.sort,
+  const opts = {
+    page: extractPage(search),
+    filter: extractFilter(search),
+    sort: urlParams.get("sort"),
     includes: init?.includes,
   } as FetchOpts;
+  if (opts.page === undefined) {
+    opts.page = init?.page;
+  }
+  if (opts.filter === undefined) {
+    opts.filter = init?.filter;
+  }
+  if (opts.sort === null) {
+    opts.sort = init?.sort;
+  }
+  return opts;
 };

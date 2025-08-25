@@ -121,11 +121,22 @@ export class SingleObjectForm<T> implements ObjectForm {
 
   handleChange = (event: ChangeEvent<FormControlElement>) => {
     const target = event.currentTarget as HTMLInputElement;
-    const value = target.type === "checkbox" ? target.checked : target.value;
     const name = target.name;
-    if (target.type == "date" && !value) {
-      this.removeValue(name);
-      return;
+    let value: settableValue; // = target.type === "checkbox" ? target.checked : target.value;
+    switch (target.type) {
+      case "number":
+        value = target.valueAsNumber;
+        break;
+      case "checkbox":
+        value = target.checked;
+        break;
+      case "date":
+      case "datetime-local": {
+        value = new Date(target.value);
+        break;
+      }
+      default:
+        value = target.value;
     }
     this.setValue(name, value);
   };

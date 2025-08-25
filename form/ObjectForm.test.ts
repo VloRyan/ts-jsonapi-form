@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { SingleObjectForm } from "./ObjectForm.ts";
+import { FormControlElement, SingleObjectForm } from "./ObjectForm.ts";
 import { ResourceObject } from "../jsonapi/model";
+import { ChangeEvent } from "react";
+
 interface TestObject {
   name?: string;
   nested?: {
@@ -15,6 +17,8 @@ const obj = {
   name: "Willy",
   components: { tires: "GripTop" },
   races: ["SpeedRace", "DeathRace 3000"],
+  wins: 88,
+  dateOfConstruction: Date.parse("1985-02-01T08:36:55"),
   driver: {
     id: "2",
     type: "human",
@@ -156,5 +160,82 @@ describe("removeValue", () => {
 
     form.removeValue("driver.id"); // remove after other tests
     expect(changedPath).toBe("driver.id");
+  });
+});
+
+const dummyObject = {
+  text: "This is a text",
+  number: 47,
+  date: Date.parse("1985-02-01T08:36:55"),
+  bool: true,
+};
+
+describe("handleChange", () => {
+  it("setValue from text value", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+    const newValue = "Another value";
+
+    form.handleChange({
+      currentTarget: { type: "text", name: "text", value: newValue },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.text).toBe(newValue);
+  });
+
+  it("setValue from number value", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+    const newValue = 88;
+
+    form.handleChange({
+      currentTarget: {
+        type: "number",
+        name: "number",
+        valueAsNumber: newValue,
+      },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.number).toBe(newValue);
+  });
+
+  it("setValue from date value", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+    const newValue = "2025-01-01T12:01:00Z";
+
+    form.handleChange({
+      currentTarget: {
+        type: "date",
+        name: "date",
+        value: newValue,
+      },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.date).toEqual(new Date(newValue));
+  });
+
+  it("setValue from check value", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+    const newValue = false;
+
+    form.handleChange({
+      currentTarget: {
+        type: "checkbox",
+        name: "bool",
+        checked: newValue,
+      },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.bool).toBe(newValue);
   });
 });

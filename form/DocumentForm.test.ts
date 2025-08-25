@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ResourceObjectForm } from "./ResourceObjectForm.ts";
+import { DocumentForm } from "./DocumentForm.ts";
 import {
   Included,
   LinkObject,
@@ -71,7 +71,7 @@ const doc = {
 
 describe("getValue", () => {
   it("should get attrib value", () => {
-    const form = new ResourceObjectForm({ document: doc });
+    const form = new DocumentForm({ document: doc });
 
     expect(form.getValue("id")).toBe("1");
     expect(form.getValue("name")).toBe("Willy");
@@ -80,13 +80,13 @@ describe("getValue", () => {
   });
 
   it("should get relationship value", () => {
-    const form = new ResourceObjectForm({ document: doc });
+    const form = new DocumentForm({ document: doc });
 
     expect(form.getValue("driver.id")).toBe("2");
   });
 
   it("should get included value", () => {
-    const form = new ResourceObjectForm({ document: doc });
+    const form = new DocumentForm({ document: doc });
 
     expect(form.getValue("driver.name")).toBe("Herbert");
     expect(form.getValue("driver.skills.drift")).toBe("average");
@@ -97,7 +97,7 @@ describe("getValue", () => {
   });
 
   it("should return undefined on ambiguous or not existing relationship attribute", () => {
-    const form = new ResourceObjectForm({ document: doc });
+    const form = new DocumentForm({ document: doc });
 
     expect(form.getValue("passengers.name")).toBeUndefined();
     expect(form.getValue("passengers[1].name")).toBeUndefined();
@@ -109,7 +109,7 @@ describe("getValue", () => {
 describe("setValue", () => {
   it("should set attrib value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -129,7 +129,7 @@ describe("setValue", () => {
 
   it("should set relationship value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -140,7 +140,7 @@ describe("setValue", () => {
 
   it("should set included value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -153,7 +153,7 @@ describe("setValue", () => {
 
   it("should set attribute array value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -167,7 +167,7 @@ describe("setValue", () => {
 
   it("should set included array value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -181,7 +181,7 @@ describe("setValue", () => {
 
   it("should set ResourceObject as new include", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -196,7 +196,7 @@ describe("setValue", () => {
 
   it("should set ResourceObject[] as new include", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -214,7 +214,7 @@ describe("setValue", () => {
 
   it("should set ResourceObject updating relationship and include", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -231,7 +231,7 @@ describe("setValue", () => {
     let changedPath = "";
     const testDoc = structuredClone(doc);
     testDoc.data.relationships.driver.data.id = "3"; // change to rechange
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
       onChange: (_newState: ResourceObject | null, path: string) => {
         changedPath = path;
@@ -255,7 +255,7 @@ describe("setValue", () => {
 describe("removeValue", () => {
   it("should remove attrib value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -274,7 +274,7 @@ describe("removeValue", () => {
 
   it("should remove relationship value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -285,7 +285,7 @@ describe("removeValue", () => {
 
   it("should remove included value", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -305,7 +305,7 @@ describe("removeValue", () => {
 
   it("should set relationship to NULL and remove included", () => {
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
     });
 
@@ -321,7 +321,7 @@ describe("removeValue", () => {
   it("should fire onChange", () => {
     let changedPath = "";
     const testDoc = structuredClone(doc);
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: testDoc,
       onChange: (_newState: ResourceObject | null, path: string) => {
         changedPath = path;
@@ -344,7 +344,7 @@ describe("removeValue", () => {
 
 describe("getLink", () => {
   it("should return link", () => {
-    const form = new ResourceObjectForm({
+    const form = new DocumentForm({
       document: doc,
     });
     expect(form.getLink("self")).toBe("https://willy.gone-wild.test");

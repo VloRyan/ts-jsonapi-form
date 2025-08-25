@@ -1,8 +1,8 @@
 import { createResource, updateResource } from "../jsonapi/";
 import {
   createDocument,
-  Included,
   isResourceObject,
+  isSameId,
   ObjectLike,
   RelationshipObject,
   RelationshipsObject,
@@ -16,7 +16,7 @@ import { getValue, removeField, setValue } from "./Value.ts";
 import { SingleObjectForm } from "./ObjectForm.ts";
 import { FormEvent } from "react";
 
-export interface ResourceObjectFormProps {
+export interface DocumentFormProps {
   document: SingleResourceDoc | null;
   name?: string;
   /** id of the form */
@@ -26,16 +26,15 @@ export interface ResourceObjectFormProps {
   onSubmitSuccess?: (object: ResourceObject) => void;
   onSubmitError?: (error: Error) => void;
   apiUrl?: string;
-  included?: Included;
 }
 
-export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
+export class DocumentForm extends SingleObjectForm<ResourceObject> {
   doc: SingleResourceDoc | null;
   private readonly onSubmitSuccess?: (object: ResourceObject) => void;
   private readonly onSubmitError?: (error: Error) => void;
   private readonly apiUrl?: string;
 
-  constructor(props: ResourceObjectFormProps) {
+  constructor(props: DocumentFormProps) {
     super({
       ...props,
       object: null,
@@ -310,11 +309,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       }
       if (Array.isArray(otherRel.data)) {
         for (const otherIdentifier of otherRel.data) {
-          if (
-            otherIdentifier.type == id.type &&
-            otherIdentifier.id == id.id &&
-            otherIdentifier.lid == id.lid
-          ) {
+          if (isSameId(otherIdentifier, id)) {
             refCount++;
             if (refCount > 1) {
               break;
@@ -323,11 +318,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
         }
       } else {
         const otherIdentifier = otherRel.data as ResourceIdentifierObject;
-        if (
-          otherIdentifier.type == id.type &&
-          otherIdentifier.id == id.id &&
-          otherIdentifier.lid == id.lid
-        ) {
+        if (isSameId(otherIdentifier, id)) {
           refCount++;
           if (refCount > 1) {
             break;
@@ -489,11 +480,7 @@ export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
       return -1;
     }
     for (let i = 0; i < this.doc.included.length; i++) {
-      if (
-        this.doc.included[i].type === id.type &&
-        this.doc.included[i].id === id.id &&
-        this.doc.included[i].lid === id.lid
-      ) {
+      if (isSameId(this.doc.included[i], id)) {
         return i;
       }
     }

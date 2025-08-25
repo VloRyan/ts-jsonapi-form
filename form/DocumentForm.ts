@@ -1,7 +1,6 @@
 import { createResource, updateResource } from "../jsonapi/";
 import {
   createDocument,
-  Included,
   isResourceObject,
   isSameId,
   ObjectLike,
@@ -17,7 +16,7 @@ import { getValue, removeField, setValue } from "./Value.ts";
 import { SingleObjectForm } from "./ObjectForm.ts";
 import { FormEvent } from "react";
 
-export interface ResourceObjectFormProps {
+export interface DocumentFormProps {
   document: SingleResourceDoc | null;
   name?: string;
   /** id of the form */
@@ -27,16 +26,15 @@ export interface ResourceObjectFormProps {
   onSubmitSuccess?: (object: ResourceObject) => void;
   onSubmitError?: (error: Error) => void;
   apiUrl?: string;
-  included?: Included;
 }
 
-export class ResourceObjectForm extends SingleObjectForm<ResourceObject> {
+export class DocumentForm extends SingleObjectForm<ResourceObject> {
   doc: SingleResourceDoc | null;
   private readonly onSubmitSuccess?: (object: ResourceObject) => void;
   private readonly onSubmitError?: (error: Error) => void;
   private readonly apiUrl?: string;
 
-  constructor(props: ResourceObjectFormProps) {
+  constructor(props: DocumentFormProps) {
     super({
       ...props,
       object: null,

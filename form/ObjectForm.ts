@@ -132,7 +132,8 @@ export class SingleObjectForm<T> implements ObjectForm {
         break;
       case "date":
       case "datetime-local": {
-        value = new Date(target.value);
+        const d = new Date(target.value);
+        value = d.toISOString().slice(0, 19) + "Z";
         break;
       }
       default:

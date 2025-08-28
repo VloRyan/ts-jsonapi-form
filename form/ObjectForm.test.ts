@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FormControlElement, SingleObjectForm } from "./ObjectForm.ts";
 import { ResourceObject } from "../jsonapi/model";
 import { ChangeEvent } from "react";
@@ -166,12 +166,17 @@ describe("removeValue", () => {
 const dummyObject = {
   text: "This is a text",
   number: 47,
-  date: Date.parse("1985-02-01T08:36:55"),
+  date: "1985-02-01",
+  dateTime: "1985-02-01T08:36:55Z",
   bool: true,
 };
 
 describe("handleChange", () => {
-  it("setValue from text value", () => {
+  beforeEach(() => {
+    vi.stubEnv("TZ", "Europe/Berlin"); // UTC+01:00
+  });
+
+  it("GIVEN text value THEN set text value", () => {
     const testObject = structuredClone(dummyObject);
     const form = new SingleObjectForm({
       object: testObject,
@@ -185,7 +190,7 @@ describe("handleChange", () => {
     expect(testObject.text).toBe(newValue);
   });
 
-  it("setValue from number value", () => {
+  it("GIVEN number value THEN set number value", () => {
     const testObject = structuredClone(dummyObject);
     const form = new SingleObjectForm({
       object: testObject,
@@ -203,25 +208,41 @@ describe("handleChange", () => {
     expect(testObject.number).toBe(newValue);
   });
 
-  it("setValue from date value", () => {
+  it("GIVEN date value THEN set iso date string", () => {
     const testObject = structuredClone(dummyObject);
     const form = new SingleObjectForm({
       object: testObject,
     });
-    const newValue = "2025-01-01T12:01:00Z";
 
     form.handleChange({
       currentTarget: {
         type: "date",
         name: "date",
-        value: newValue,
+        value: "2025-01-01",
       },
     } as unknown as ChangeEvent<FormControlElement>);
 
-    expect(testObject.date).toEqual(new Date(newValue));
+    expect(testObject.date).toEqual("2025-01-01T00:00:00Z");
   });
 
-  it("setValue from check value", () => {
+  it("GIVEN datetime-local value THEN set iso date string", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+
+    form.handleChange({
+      currentTarget: {
+        type: "datetime-local",
+        name: "dateTime",
+        value: "2025-01-01T02:30", // in UTC+01:00
+      },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.dateTime).toEqual("2025-01-01T01:30:00Z");
+  });
+
+  it("GIVEN checkbox value THEN set bool value", () => {
     const testObject = structuredClone(dummyObject);
     const form = new SingleObjectForm({
       object: testObject,

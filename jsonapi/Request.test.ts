@@ -14,11 +14,11 @@ describe("extractFilter", () => {
 
   it("should return filter fields on valid query", async () => {
     const expectedFilter = {
-      fieldA: "1",
-      fieldB: "2",
+      fieldA: "A",
+      fieldB: "B",
     } satisfies ObjectLike;
 
-    expect(extractFilter("filter[fieldA]=1&filter[fieldB]=2")).toEqual(
+    expect(extractFilter("filter[fieldA]=A&filter[fieldB]=B")).toEqual(
       expectedFilter,
     );
   });
@@ -39,6 +39,21 @@ describe("extractFilter", () => {
     expect(extractFilter("filter[obj.fieldA]=A&filter[obj.fieldB]=B")).toEqual(
       expectedFilter,
     );
+  });
+
+  it("should return parsed filter fields on valid query", async () => {
+    const expectedFilter = {
+      intField: 1,
+      floatField: 7.2,
+      boolField: true,
+      other: "2017-01-01",
+    } satisfies ObjectLike;
+
+    expect(
+      extractFilter(
+        "filter[intField]=1&filter[floatField]=7.2&filter[boolField]=true&filter[other]=2017-01-01",
+      ),
+    ).toEqual(expectedFilter);
   });
 });
 

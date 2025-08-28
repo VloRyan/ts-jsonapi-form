@@ -225,6 +225,23 @@ describe("handleChange", () => {
     expect(testObject.date).toEqual("2025-01-01T00:00:00Z");
   });
 
+  it("GIVEN empty date value THEN remove value", () => {
+    const testObject = structuredClone(dummyObject);
+    const form = new SingleObjectForm({
+      object: testObject,
+    });
+
+    form.handleChange({
+      currentTarget: {
+        type: "date",
+        name: "date",
+        value: "",
+      },
+    } as unknown as ChangeEvent<FormControlElement>);
+
+    expect(testObject.date).toBeUndefined();
+  });
+
   it("GIVEN datetime-local value THEN set iso date string", () => {
     const testObject = structuredClone(dummyObject);
     const form = new SingleObjectForm({

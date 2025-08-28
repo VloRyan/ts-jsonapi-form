@@ -132,14 +132,22 @@ export class SingleObjectForm<T> implements ObjectForm {
         break;
       case "date":
       case "datetime-local": {
-        const d = new Date(target.value);
-        value = d.toISOString().slice(0, 19) + "Z";
+        if (target.value) {
+          const d = new Date(target.value);
+          value = d.toISOString().slice(0, 19) + "Z";
+        } else {
+          value = null;
+        }
         break;
       }
       default:
         value = target.value;
     }
-    this.setValue(name, value);
+    if (value === null || value === undefined) {
+      this.removeValue(name);
+    } else {
+      this.setValue(name, value);
+    }
   };
 
   handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {

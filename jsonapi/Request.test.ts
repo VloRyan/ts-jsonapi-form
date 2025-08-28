@@ -5,15 +5,11 @@ import { ObjectLike } from "./model/";
 
 describe("extractFilter", () => {
   it("should return undefined on empty query", async () => {
-    const filter = extractFilter("");
-
-    expect(filter).toEqual(undefined);
+    expect(extractFilter("")).toEqual(undefined);
   });
 
   it("should return undefined on query without filter", async () => {
-    const filter = extractFilter("test=true&another=false");
-
-    expect(filter).toEqual(undefined);
+    expect(extractFilter("test=true&another=false")).toEqual(undefined);
   });
 
   it("should return filter fields on valid query", async () => {
@@ -22,9 +18,9 @@ describe("extractFilter", () => {
       fieldB: "2",
     } satisfies ObjectLike;
 
-    const filter = extractFilter("filter[fieldA]=1&filter[fieldB]=2");
-
-    expect(filter).toEqual(expectedFilter);
+    expect(extractFilter("filter[fieldA]=1&filter[fieldB]=2")).toEqual(
+      expectedFilter,
+    );
   });
 
   it("should return decoded filter fields on valid query with encoded uri", async () => {
@@ -32,9 +28,17 @@ describe("extractFilter", () => {
       fieldA: "C&A",
     } satisfies ObjectLike;
 
-    const filter = extractFilter("filter[fieldA]=C%26A");
+    expect(extractFilter("filter[fieldA]=C%26A")).toEqual(expectedFilter);
+  });
 
-    expect(filter).toEqual(expectedFilter);
+  it("should return object on path keys", async () => {
+    const expectedFilter = {
+      obj: { fieldA: "A", fieldB: "B" },
+    } satisfies ObjectLike;
+
+    expect(extractFilter("filter[obj.fieldA]=A&filter[obj.fieldB]=B")).toEqual(
+      expectedFilter,
+    );
   });
 });
 

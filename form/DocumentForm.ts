@@ -272,9 +272,8 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
     }
     if (this.onSubmit && this.doc.data) {
       this.onSubmit(this.doc.data);
-    } else {
-      this.submitResource();
     }
+    this.submitResource();
   };
 
   getLink(path: string): unknown {

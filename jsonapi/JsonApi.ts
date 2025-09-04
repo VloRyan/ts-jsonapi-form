@@ -91,7 +91,7 @@ function pushObject(arr: Array<string>, obj: any, name: string) {
   }
   for (const key in obj) {
     const v = obj[key];
-    if (!v) {
+    if (v == undefined) {
       continue;
     }
     arr.push(name + "[" + key + "]=" + encodeURIComponent(v));

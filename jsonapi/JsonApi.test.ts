@@ -4,7 +4,7 @@ import {
   fetchResource,
   findInclude,
   MEDIA_TYPE,
-} from "./JsonApi.ts";
+} from "./JsonApi";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
 import {
@@ -40,7 +40,7 @@ describe("fetchResource", () => {
     expect((resp as SingleResourceDoc).data.type).eq("test");
 
     expect(fetchMock.mock.calls.length).toEqual(1);
-    expect(fetchMock.mock.calls[0][0]).toEqual("http://test");
+    expect(fetchMock.mock.calls[0]![0]).toEqual("http://test");
   });
 
   it("should return error document", async () => {
@@ -61,11 +61,11 @@ describe("fetchResource", () => {
       err = error as ApiError;
     }
     assert(err != null && err.errors.length === 1);
-    expect(err.errors[0].title).toContain("Ooops");
-    expect(err.errors[0].detail).toContain("error occurred");
+    expect(err.errors[0]!.title).toContain("Ooops");
+    expect(err.errors[0]!.detail).toContain("error occurred");
 
     expect(fetchMock.mock.calls.length).toEqual(1);
-    expect(fetchMock.mock.calls[0][0]).toEqual("http://error");
+    expect(fetchMock.mock.calls[0]![0]).toEqual("http://error");
   });
 
   it("should throw error", async () => {
@@ -79,10 +79,10 @@ describe("fetchResource", () => {
       err = error as ApiError;
     }
     assert(err != null && err.errors.length === 1);
-    expect(err.errors[0].title).toContain("Invalid server response");
+    expect(err.errors[0]!.title).toContain("Invalid server response");
 
     expect(fetchMock.mock.calls.length).toEqual(1);
-    expect(fetchMock.mock.calls[0][0]).toEqual("http://unknown");
+    expect(fetchMock.mock.calls[0]![0]).toEqual("http://unknown");
   });
 
   it("should return null", async () => {
@@ -95,17 +95,26 @@ describe("fetchResource", () => {
     expect(resp).toBeNull();
 
     expect(fetchMock.mock.calls.length).toEqual(1);
-    expect(fetchMock.mock.calls[0][0]).toEqual("http://unknown");
+    expect(fetchMock.mock.calls[0]![0]).toEqual("http://unknown");
   });
 });
 
 test.each([
-  [{} satisfies FetchOpts, ""],
+  [
+    {
+      page: undefined,
+      filter: undefined,
+      includes: undefined,
+      sort: undefined,
+    } satisfies FetchOpts,
+    "",
+  ],
   [
     {
       filter: { name: "test" },
       page: { offset: 1, limit: 10 },
       includes: ["success"],
+      sort: undefined,
     } satisfies FetchOpts,
     "?page[offset]=1&page[limit]=10&filter[name]=test&include=success",
   ],
@@ -119,12 +128,17 @@ describe("findInclude", () => {
   it("should return include by id and type", async () => {
     const id = {
       id: "4711",
+      lid: undefined,
       type: "testType",
     } satisfies ResourceIdentifierObject;
-    const expected: ResourceObject = { id: "4711", type: "testType" };
+    const expected: ResourceObject = {
+      id: "4711",
+      lid: undefined,
+      type: "testType",
+    };
     const includes: Included = [
-      { id: "4711", type: "other" },
-      { id: "4712", type: "testType" },
+      { id: "4711", lid: undefined, type: "other" },
+      { id: "4712", lid: undefined, type: "testType" },
       expected,
     ];
 
@@ -152,12 +166,17 @@ describe("findIncludes", () => {
   it("should return include by id and type", async () => {
     const id = {
       id: "4711",
+      lid: undefined,
       type: "testType",
     } satisfies ResourceIdentifierObject;
-    const expected: ResourceObject = { id: "4711", type: "testType" };
+    const expected: ResourceObject = {
+      id: "4711",
+      lid: undefined,
+      type: "testType",
+    };
     const includes: Included = [
-      { id: "4711", type: "other" },
-      { id: "4712", type: "testType" },
+      { id: "4711", lid: undefined, type: "other" },
+      { id: "4712", lid: undefined, type: "testType" },
       expected,
     ];
 

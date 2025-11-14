@@ -1,2 +1,2 @@
-export * from "./AtomicOperationsApi.ts";
-export * from "./model/Document.ts";
+export * from "./AtomicOperationsApi";
+export * from "./model/Document";

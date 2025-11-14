@@ -3,18 +3,18 @@ import {
   Included,
   ApiError,
   ResourceIdentifierObject,
-  ObjectLike,
   isSameId,
-} from "./model/";
+  ObjectLike,
+} from "./model";
 import { StatusCodes } from "http-status-codes";
 
 export const MEDIA_TYPE = "application/vnd.api+json";
 
 export interface FetchOpts {
-  page?: Page;
-  filter?: ObjectLike;
-  includes?: string[];
-  sort?: string;
+  page: Page | undefined;
+  filter: ObjectLike | undefined;
+  includes: string[] | undefined;
+  sort: string | undefined;
 }
 
 export interface Page {
@@ -28,7 +28,7 @@ async function callApi(method: string, url: string, body?: APIDocument) {
     headers: {
       "Content-Type": MEDIA_TYPE,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : null,
   }).then(async (resp) => {
     if (resp.status == StatusCodes.NO_CONTENT) {
       return null;

@@ -1,4 +1,4 @@
-import { getValue, removeField, setValue } from "./Value.ts";
+import { getValue, removeField, setValue } from "./Value";
 import { ObjectLike } from "../jsonapi/model/";
 
 import React, { ChangeEvent, FormEvent } from "react";
@@ -18,6 +18,7 @@ export type settableValue =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | any[]
   | Date
+  | undefined
   | null;
 
 export interface ObjectForm {
@@ -57,8 +58,10 @@ export interface ChangePathHandler {
 export class SingleObjectForm<T> implements ObjectForm {
   object: T | null;
   id: string | undefined;
-  protected readonly onChange?: (object: T | null, path: string) => void;
-  protected readonly onSubmit?: (object: T) => void;
+  protected readonly onChange:
+    | ((object: T | null, path: string) => void)
+    | undefined;
+  protected readonly onSubmit: ((object: T) => void) | undefined;
   protected onChangePathHandler: ChangePathHandler[];
 
   constructor(props: SingleObjectFormProps<T>) {

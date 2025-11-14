@@ -6,7 +6,7 @@ export interface ObjectLike {
 
 export type Arr = Array<Value>;
 
-export type Value = Primitive | ObjectLike | Arr;
+export type Value = Primitive | ObjectLike | Arr | undefined | null;
 
 export type MetaObject = ObjectLike;
 

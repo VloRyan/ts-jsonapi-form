@@ -7,10 +7,6 @@
     /* Modules */
     "module": "es2022",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-
-    /* Emit */
-    "noEmit": true,
 
     /* Interop Constraints */
     "allowSyntheticDefaultImports": true,
@@ -22,9 +18,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": false,
+    "allowUmdGlobalAccess": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
 
     /* Completeness */
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "include": ["form", "functions", "hooks", "jsonapi"],
   "exclude": ["node_modules"],

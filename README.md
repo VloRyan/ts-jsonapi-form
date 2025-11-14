@@ -33,7 +33,7 @@ Accept: application/vnd.api+json
 you can do the following
 
 ```ts
-import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi.ts";
+import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi";
 
 fetchResource("http://example.com/articles", {
   filter: { name: "ts-jsonapi-form" },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FetchOpts, Page } from "./";
-import { extractFetchOpts, extractFilter, extractPage } from "./Request.ts";
+import { extractFetchOpts, extractFilter, extractPage } from "./Request";
 import { ObjectLike } from "./model/";
 
 describe("extractFilter", () => {
@@ -109,7 +109,12 @@ describe("extractFetchOpts", () => {
     const expectedPage = { offset: 1, limit: 2 } satisfies Page;
     const expectedOpts = { ...defaultOps, page: expectedPage };
 
-    const opts = extractFetchOpts("", { page: expectedPage });
+    const opts = extractFetchOpts("", {
+      filter: undefined,
+      includes: undefined,
+      sort: undefined,
+      page: expectedPage,
+    });
 
     expect(opts).toEqual(expectedOpts);
   });
@@ -118,7 +123,12 @@ describe("extractFetchOpts", () => {
     const expectedFilter = { a: "B" };
     const expectedOpts = { ...defaultOps, filter: expectedFilter };
 
-    const opts = extractFetchOpts("", { filter: expectedFilter });
+    const opts = extractFetchOpts("", {
+      filter: expectedFilter,
+      includes: undefined,
+      sort: undefined,
+      page: undefined,
+    });
 
     expect(opts).toEqual(expectedOpts);
   });
@@ -127,7 +137,12 @@ describe("extractFetchOpts", () => {
     const expectedSort = "-fieldA";
     const expectedOpts = { ...defaultOps, sort: expectedSort };
 
-    const opts = extractFetchOpts("", { sort: expectedSort });
+    const opts = extractFetchOpts("", {
+      filter: undefined,
+      includes: undefined,
+      sort: expectedSort,
+      page: undefined,
+    });
 
     expect(opts).toEqual(expectedOpts);
   });
@@ -136,7 +151,12 @@ describe("extractFetchOpts", () => {
     const expectedIncludes = ["fieldA"];
     const expectedOpts = { ...defaultOps, includes: expectedIncludes };
 
-    const opts = extractFetchOpts("", { includes: expectedIncludes });
+    const opts = extractFetchOpts("", {
+      filter: undefined,
+      includes: expectedIncludes,
+      sort: undefined,
+      page: undefined,
+    });
 
     expect(opts).toEqual(expectedOpts);
   });

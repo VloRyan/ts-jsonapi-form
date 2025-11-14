@@ -1,3 +1,3 @@
-export * from "./ObjectForm.ts";
-export * from "./DocumentForm.ts";
-export * from "./Value.ts";
+export * from "./ObjectForm";
+export * from "./DocumentForm";
+export * from "./Value";

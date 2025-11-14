@@ -4,12 +4,16 @@ import {
   isSameId,
   ResourceIdentifierObject,
   ResourceObject,
-} from "./Objects.ts";
-import { ObjectLike } from "./Types.ts";
+} from "./Objects";
+import { ObjectLike } from "./Types";
 
 describe("isResourceObject", () => {
   it("should return true on ResourceObject", async () => {
-    const objWithId: ResourceObject = { id: "1", type: "object" };
+    const objWithId: ResourceObject = {
+      id: "1",
+      lid: undefined,
+      type: "object",
+    };
     const objWithLid = { lid: "1", type: "object" };
 
     expect(isResourceObject(objWithId as unknown as ObjectLike)).toBe(true);
@@ -17,7 +21,11 @@ describe("isResourceObject", () => {
   });
 
   it("should return true on ResourceIdentifierObject", async () => {
-    const obj: ResourceIdentifierObject = { id: "1", type: "object" };
+    const obj: ResourceIdentifierObject = {
+      id: "1",
+      lid: undefined,
+      type: "object",
+    };
 
     expect(isResourceObject(obj as unknown as ObjectLike)).toBe(true);
   });
@@ -34,8 +42,16 @@ describe("isResourceObject", () => {
 
 describe("isSameId", () => {
   it("should return true on same by id", async () => {
-    const a: ResourceIdentifierObject = { id: "1", type: "object" };
-    const b: ResourceIdentifierObject = { id: "1", type: "object" };
+    const a: ResourceIdentifierObject = {
+      id: "1",
+      lid: undefined,
+      type: "object",
+    };
+    const b: ResourceIdentifierObject = {
+      id: "1",
+      lid: undefined,
+      type: "object",
+    };
 
     expect(isSameId(a, b)).toBe(true);
   });
@@ -49,10 +65,16 @@ describe("isSameId", () => {
 
   it("should return false on different ids", async () => {
     expect(
-      isSameId({ id: "1", type: "object" }, { id: "2", type: "object" }),
+      isSameId(
+        { id: "1", lid: undefined, type: "object" },
+        { id: "2", lid: undefined, type: "object" },
+      ),
     ).toBe(false);
     expect(
-      isSameId({ id: "1", type: "object" }, { id: "1", type: "other" }),
+      isSameId(
+        { id: "1", lid: undefined, type: "object" },
+        { id: "1", lid: undefined, type: "other" },
+      ),
     ).toBe(false);
     expect(
       isSameId(

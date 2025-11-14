@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FormControlElement, SingleObjectForm } from "./ObjectForm.ts";
+import { FormControlElement, SingleObjectForm } from "./ObjectForm";
 import { ResourceObject } from "../jsonapi/model";
 import { ChangeEvent } from "react";
 
@@ -13,6 +13,7 @@ interface TestObject {
 
 const obj = {
   id: "1",
+  lid: undefined,
   type: "car",
   name: "Willy",
   components: { tires: "GripTop" },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getValue, removeField, splitPath } from "./Value.ts";
+import { getValue, removeField, splitPath } from "./Value";
 
 describe("getValue", () => {
   it("first level", () => {

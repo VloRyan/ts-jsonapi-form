@@ -16,6 +16,12 @@ export interface FetchOpts {
   includes: string[] | undefined;
   sort: string | undefined;
 }
+export const EmptyFetchOpts: FetchOpts = {
+  page: undefined,
+  filter: undefined,
+  includes: undefined,
+  sort: undefined,
+};
 
 export interface Page {
   limit: number | undefined;

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { FormControlElement, SingleObjectForm } from "./ObjectForm";
+import { SingleObjectForm } from "./ObjectForm";
 import { ResourceObject } from "../jsonapi/model";
-import { ChangeEvent } from "react";
 
 interface TestObject {
   name?: string;
@@ -186,7 +185,7 @@ describe("handleChange", () => {
 
     form.handleChange({
       currentTarget: { type: "text", name: "text", value: newValue },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.text).toBe(newValue);
   });
@@ -204,7 +203,7 @@ describe("handleChange", () => {
         name: "number",
         valueAsNumber: newValue,
       },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.number).toBe(newValue);
   });
@@ -221,7 +220,7 @@ describe("handleChange", () => {
         name: "date",
         value: "2025-01-01",
       },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.date).toEqual("2025-01-01T00:00:00Z");
   });
@@ -238,7 +237,7 @@ describe("handleChange", () => {
         name: "date",
         value: "",
       },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.date).toBeUndefined();
   });
@@ -255,7 +254,7 @@ describe("handleChange", () => {
         name: "dateTime",
         value: "2025-01-01T02:30", // in UTC+01:00
       },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.dateTime).toEqual("2025-01-01T01:30:00Z");
   });
@@ -273,7 +272,7 @@ describe("handleChange", () => {
         name: "bool",
         checked: newValue,
       },
-    } as unknown as ChangeEvent<FormControlElement>);
+    } as unknown as HTMLInputElement);
 
     expect(testObject.bool).toBe(newValue);
   });

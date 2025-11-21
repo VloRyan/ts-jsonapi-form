@@ -1,8 +1,6 @@
 import { getValue, removeField, setValue } from "./Value";
 import { ObjectLike } from "../jsonapi/model/";
 
-import React, { ChangeEvent, FormEvent } from "react";
-
 export type FormControlElement =
   | HTMLInputElement
   | HTMLTextAreaElement
@@ -21,25 +19,24 @@ export type settableValue =
   | undefined
   | null;
 
-export interface ObjectForm {
+export interface ObjectForm<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue(path: string): any;
   setValue(path: string, value: settableValue): void;
   removeValue(path: string): void;
-
   onChangePath(exp: RegExp, callback: () => void | null): void;
-
-  handleChange(event: ChangeEvent<FormControlElement>): void;
-
-  handleSubmit(e: FormEvent): void;
-  withOffset(offset: string): ObjectForm;
+  handleChangeEvent(event: Event): void;
+  handleChange(element: HTMLInputElement): void;
+  handleSubmit(e: Event): void;
+  submit(): Promise<T | null>;
+  withOffset(offset: string): ObjectForm<T>;
   isEmpty(): boolean;
 
   setup(): {
     id: string | undefined;
     method: string;
-    onSubmit: (e: FormEvent) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLFormElement>) => void;
+    onSubmit: (e: Event) => void;
+    onKeyDown: (e: KeyboardEvent) => void;
   };
 }
 
@@ -51,11 +48,13 @@ export interface SingleObjectFormProps<T> {
   onChange?: (object: T | null, path: string) => void;
   onSubmit?: (object: T) => void;
 }
+
 export interface ChangePathHandler {
   expression: RegExp;
   callback: () => void;
 }
-export class SingleObjectForm<T> implements ObjectForm {
+
+export class SingleObjectForm<T> implements ObjectForm<T> {
   object: T | null;
   id: string | undefined;
   protected readonly onChange:
@@ -75,8 +74,8 @@ export class SingleObjectForm<T> implements ObjectForm {
   setup(): {
     id: string | undefined;
     method: string;
-    onSubmit: (e: FormEvent) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLFormElement>) => void;
+    onSubmit: (e: Event) => void;
+    onKeyDown: (e: KeyboardEvent) => void;
   } {
     return {
       id: this.id,
@@ -122,21 +121,25 @@ export class SingleObjectForm<T> implements ObjectForm {
     }
   };
 
-  handleChange = (event: ChangeEvent<FormControlElement>) => {
-    const target = event.currentTarget as HTMLInputElement;
-    const name = target.name;
-    let value: settableValue; // = target.type === "checkbox" ? target.checked : target.value;
-    switch (target.type) {
+  handleChangeEvent = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    this.handleChange(target);
+  };
+
+  handleChange = (element: HTMLInputElement) => {
+    const name = element.name;
+    let value: settableValue;
+    switch (element.type) {
       case "number":
-        value = target.valueAsNumber;
+        value = element.value !== "" ? element.valueAsNumber : null;
         break;
       case "checkbox":
-        value = target.checked;
+        value = element.checked;
         break;
       case "date":
       case "datetime-local": {
-        if (target.value) {
-          const d = new Date(target.value);
+        if (element.value) {
+          const d = new Date(element.value);
           value = d.toISOString().slice(0, 19) + "Z";
         } else {
           value = null;
@@ -144,7 +147,7 @@ export class SingleObjectForm<T> implements ObjectForm {
         break;
       }
       default:
-        value = target.value;
+        value = element.value;
     }
     if (value === null || value === undefined) {
       this.removeValue(name);
@@ -153,25 +156,27 @@ export class SingleObjectForm<T> implements ObjectForm {
     }
   };
 
-  handleKeyDown = (event: React.KeyboardEvent<HTMLFormElement>) => {
+  handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter") {
       event.preventDefault();
     }
   };
 
-  handleSubmit = (e: FormEvent) => {
+  handleSubmit = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!this.object) {
-      return;
-    }
+    this.submit().then();
+  };
+
+  submit = (): Promise<T | null> => {
     if (this.onSubmit && this.object) {
       this.onSubmit(this.object);
     }
+    return new Promise<T | null>(() => {});
   };
 
-  withOffset(offset: string): ObjectForm {
-    return new OffsetForm({ form: this, offset: offset });
+  withOffset(offset: string): ObjectForm<T> {
+    return new OffsetForm<T>({ form: this, offset: offset });
   }
 
   protected fireChanged(path: string) {
@@ -186,18 +191,18 @@ export class SingleObjectForm<T> implements ObjectForm {
   }
 }
 
-export interface OffsetFormProps {
-  form: ObjectForm;
+export interface OffsetFormProps<T> {
+  form: ObjectForm<T>;
   offset: string;
   id?: string;
 }
 
-export class OffsetForm implements ObjectForm {
-  private readonly form: ObjectForm;
+export class OffsetForm<T> implements ObjectForm<T> {
+  private readonly form: ObjectForm<T>;
   private readonly offset: string;
   private readonly id: string | undefined;
 
-  constructor(props: OffsetFormProps) {
+  constructor(props: OffsetFormProps<T>) {
     if (!props.form) {
       throw new Error("invalid form");
     }
@@ -215,25 +220,36 @@ export class OffsetForm implements ObjectForm {
     return this.form.getValue(this.offset + path);
   }
 
-  handleChange = (event: React.ChangeEvent<FormControlElement>): void => {
+  handleChangeEvent = (event: Event): void => {
     if (!this.form) {
       return;
     }
-    const target = event.currentTarget as HTMLInputElement;
-    const value = target.type === "checkbox" ? target.checked : target.value;
-    const name = target.name;
-    if (target.type == "date" && !value) {
+    const target = event.target as HTMLInputElement;
+    this.handleChange(target);
+  };
+
+  handleChange = (element: HTMLInputElement): void => {
+    const value = element.type === "checkbox" ? element.checked : element.value;
+    const name = element.name;
+    if (element.type == "date" && !value) {
       this.form.removeValue(this.offset + name);
       return;
     }
     this.form.setValue(this.offset + name, value);
   };
 
-  handleSubmit = (e: React.FormEvent): void => {
+  handleSubmit = (e: Event): void => {
     if (!this.form) {
       return;
     }
     this.form.handleSubmit(e);
+  };
+
+  submit = () => {
+    if (!this.form) {
+      return new Promise<T | null>(() => {});
+    }
+    return this.form.submit();
   };
 
   removeValue = (path: string): void => {
@@ -256,8 +272,8 @@ export class OffsetForm implements ObjectForm {
   setup = (): {
     id: string | undefined;
     method: string;
-    onSubmit: (e: React.FormEvent) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLFormElement>) => void;
+    onSubmit: (e: Event) => void;
+    onKeyDown: (e: KeyboardEvent) => void;
   } => {
     if (!this.form) {
       return {
@@ -272,7 +288,7 @@ export class OffsetForm implements ObjectForm {
       id: this.id,
     };
   };
-  withOffset = (offset: string): ObjectForm => {
+  withOffset = (offset: string): ObjectForm<T> => {
     return new OffsetForm({ form: this, offset: this.offset + offset });
   };
 }

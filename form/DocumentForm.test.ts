@@ -248,7 +248,7 @@ describe("setValue", () => {
     testDoc.data.relationships.driver.data.id = "3"; // change to rechange
     const form = new DocumentForm({
       document: testDoc,
-      onChange: (_newState: ResourceObject | null, path: string) => {
+      onChange: (_newState: SingleResourceDoc | null, path: string) => {
         changedPath = path;
       },
     });
@@ -338,7 +338,7 @@ describe("removeValue", () => {
     const testDoc = structuredClone(doc);
     const form = new DocumentForm({
       document: testDoc,
-      onChange: (_newState: ResourceObject | null, path: string) => {
+      onChange: (_newState: SingleResourceDoc | null, path: string) => {
         changedPath = path;
       },
     });

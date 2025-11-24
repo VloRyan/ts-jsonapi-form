@@ -1,4 +1,4 @@
-import { Errors } from "./Document.ts";
+import { Errors } from "./Document";
 
 export class ApiError extends Error {
   errors: Errors;

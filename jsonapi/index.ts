@@ -1,2 +1,2 @@
-export * from "./JsonApi.ts";
-export * from "./Request.ts";
+export * from "./JsonApi";
+export * from "./Request";

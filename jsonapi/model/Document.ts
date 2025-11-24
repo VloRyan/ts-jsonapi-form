@@ -1,21 +1,21 @@
-import { ImplementationInfo, MetaObject } from "./Types.ts";
-import { Links, PaginationLinks } from "./Links.ts";
-import { ErrorObject } from "./Error.ts";
-import { ResourceObject } from "./Objects.ts";
+import { ImplementationInfo, MetaObject } from "./Types";
+import { Links, PaginationLinks } from "./Links";
+import { ErrorObject } from "./Error";
+import { ResourceObject } from "./Objects";
 
 export interface Document<T extends PrimaryData = PrimaryData> {
-  jsonapi?: ImplementationInfo;
-  links?: Links | PaginationLinks;
-  meta?: MetaObject;
-  errors?: Errors;
-  data?: T;
-  included?: Included;
+  jsonapi: ImplementationInfo | undefined;
+  links: Links | PaginationLinks | undefined;
+  meta: MetaObject | undefined;
+  errors: Errors | undefined;
+  data: T | undefined;
+  included: Included | undefined;
 }
 
 export interface DocWithData<T extends PrimaryData = PrimaryData>
   extends Document {
   data: T;
-  included?: Included;
+  included: Included | undefined;
 }
 
 export type SingleResourceDoc = DocWithData<ResourceObject>;
@@ -31,9 +31,12 @@ export function createDocument(
   data: ResourceObject | ResourceObject[],
   included?: Included,
 ) {
-  const doc: DocWithData = {
+  return {
     data: data,
     included: included,
-  };
-  return doc;
+    jsonapi: undefined,
+    links: undefined,
+    meta: undefined,
+    errors: undefined,
+  } satisfies DocWithData;
 }

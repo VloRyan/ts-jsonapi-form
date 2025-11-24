@@ -9,6 +9,9 @@ export const getValue = (obj: any, path: string) => {
 export const setValue = (obj: any, path: string, value: any) => {
   const parts = splitPath(path);
   const attribName = parts[parts.length - 1];
+  if (attribName == undefined) {
+    throw new Error(`Invalid path: ${path}`);
+  }
   if (parts.length == 1) {
     const arrStart = attribName.indexOf("[");
     if (arrStart > -1) {
@@ -153,7 +156,7 @@ export const removeField = (obj: any, path: string) => {
       throw new Error(`field not found: ${path}`);
     }
   }
-  let fieldName = parts[parts.length - 1];
+  let fieldName = parts[parts.length - 1] ?? "";
   let elemIdx = "";
   const arrStart = fieldName.indexOf("[");
   if (arrStart !== -1) {

@@ -11,49 +11,50 @@ import {
   SingleResourceDoc,
   Value,
 } from "../jsonapi/model/";
-import { getValue, removeField, setValue } from "./Value.ts";
+import { getValue, removeField, setValue } from "./Value";
 
-import { SingleObjectForm } from "./ObjectForm.ts";
-import { FormEvent } from "react";
+import { SingleObjectForm } from "./ObjectForm";
 
 export interface DocumentFormProps {
   document: SingleResourceDoc | null;
   name?: string;
   /** id of the form */
   id?: string;
-  onChange?: (object: ResourceObject | null, path: string) => void;
-  onSubmit?: (object: ResourceObject) => void;
-  onSubmitSuccess?: (object: ResourceObject) => void;
+  onChange?: (object: SingleResourceDoc | null, path: string) => void;
+  onSubmit?: (object: SingleResourceDoc) => void;
+  onSubmitSuccess?: (object: SingleResourceDoc | null) => void;
   onSubmitError?: (error: Error) => void;
   apiUrl?: string;
 }
 
-export class DocumentForm extends SingleObjectForm<ResourceObject> {
-  doc: SingleResourceDoc | null;
-  private readonly onSubmitSuccess?: (object: ResourceObject) => void;
-  private readonly onSubmitError?: (error: Error) => void;
-  private readonly apiUrl?: string;
+export class DocumentForm extends SingleObjectForm<SingleResourceDoc> {
+  //doc: SingleResourceDoc | null;
+  private readonly onSubmitSuccess:
+    | ((object: SingleResourceDoc | null) => void)
+    | undefined;
+  private readonly onSubmitError?: ((error: Error) => void) | undefined;
+  private readonly apiUrl: string;
 
   constructor(props: DocumentFormProps) {
     super({
       ...props,
-      object: null,
+      object: props.document,
     });
-    this.doc = props.document;
+    // this.object = props.document;
     this.onSubmitSuccess = props.onSubmitSuccess;
     this.onSubmitError = props.onSubmitError;
-    this.apiUrl = props.apiUrl;
+    this.apiUrl = props.apiUrl ?? "";
   }
-  isEmpty() {
-    return this.doc == null;
+  override isEmpty() {
+    return this.object == null;
   }
 
-  getValue(path: string): unknown {
-    if (!this.doc?.data) {
+  override getValue(path: string): unknown {
+    if (!this.object?.data) {
       return null;
     }
     if (isBaseAttribute(path)) {
-      return this.doc.data[path];
+      return this.object.data[path];
     }
 
     const attrib = this.findAttribute(path);
@@ -74,7 +75,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
         for (const relId of match.ids) {
           const incIndex = this.findIncludeIndex(relId);
           if (incIndex != -1) {
-            includes.push(this.doc.included![incIndex]);
+            includes.push(this.object.included![incIndex]!);
           }
         }
         return includes;
@@ -85,15 +86,15 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
           attribPath = attribPath.substring(1);
         }
         if (isBaseAttribute(attribPath)) {
-          return relId[attribPath];
+          return relId![attribPath];
         }
-        const incIndex = this.findIncludeIndex(relId);
+        const incIndex = this.findIncludeIndex(relId!);
         if (incIndex != -1) {
-          const include = this.doc.included![incIndex];
+          const include = this.object.included![incIndex];
           if (attribPath.length === 0) {
             return include;
           }
-          return getValue(include.attributes, attribPath);
+          return getValue(include!.attributes, attribPath);
         } else {
           return relId;
         }
@@ -102,12 +103,12 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
     return undefined;
   }
 
-  setValue = (path: string, value: Value | ResourceObject[]) => {
-    if (!this.doc?.data) {
+  override setValue = (path: string, value: Value | ResourceObject[]) => {
+    if (!this.object?.data) {
       return;
     }
     if (isBaseAttribute(path)) {
-      this.doc.data[path] = value ? (value as string) : "";
+      this.object.data[path] = value ? (value as string) : "";
       this.fireChanged(path);
       return;
     }
@@ -122,37 +123,37 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
     }
 
     let attribPath = "";
-    for (const key in this.doc.data.attributes) {
+    for (const key in this.object.data.attributes) {
       if (path.startsWith(key)) {
         attribPath = path.substring(key.length);
         if (attribPath.length === 0) {
-          this.doc.data.attributes[key] = value as Value;
+          this.object.data.attributes[key] = value as Value;
           this.fireChanged(path);
           return;
         } else if (attribPath[0] === ".") {
           attribPath = attribPath.substring(1);
         }
-        setValue(this.doc.data.attributes[key], attribPath, value);
+        setValue(this.object.data.attributes[key], attribPath, value);
         this.fireChanged(path);
         return;
       }
     }
 
-    for (const key in this.doc.data.relationships) {
+    for (const key in this.object.data.relationships) {
       if (path.startsWith(key)) {
-        const relationship = this.doc.data.relationships[key];
-        if (!relationship.data) {
+        const relationship = this.object.data.relationships[key];
+        if (!relationship!.data) {
           continue;
         }
-        const identifier = relationship.data as ResourceIdentifierObject;
+        const identifier = relationship!.data as ResourceIdentifierObject;
         attribPath = path.substring(key.length + 1);
         if (isBaseAttribute(attribPath)) {
           identifier[attribPath] = value ? (value as string) : "";
           this.fireChanged(path);
           return;
         }
-        if (this.doc?.included) {
-          for (const include of this.doc!.included) {
+        if (this.object?.included) {
+          for (const include of this.object!.included) {
             if (
               include.type !== identifier.type ||
               include.id !== identifier.id ||
@@ -167,35 +168,35 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
         }
       }
     }
-    if (!this.doc.data.attributes) {
-      this.doc.data.attributes = {};
+    if (!this.object.data.attributes) {
+      this.object.data.attributes = {};
     }
-    setValue(this.doc.data.attributes, path, value);
+    setValue(this.object.data.attributes, path, value);
     this.fireChanged(path);
   };
 
-  removeValue = (path: string) => {
-    if (!this.doc?.data) {
+  override removeValue = (path: string) => {
+    if (!this.object?.data) {
       return;
     }
 
     let attribPath = "";
     if (isBaseAttribute(path)) {
-      this.doc.data[path] = "";
+      this.object.data[path] = "";
       this.fireChanged(path);
       return;
     } else {
-      for (const key in this.doc.data.attributes) {
+      for (const key in this.object.data.attributes) {
         if (path.startsWith(key)) {
           attribPath = path.substring(key.length);
           if (attribPath.length === 0) {
-            delete this.doc.data.attributes[key];
+            delete this.object.data.attributes[key];
             this.fireChanged(path);
             return;
           } else if (attribPath[0] === ".") {
             attribPath = attribPath.substring(1);
           }
-          removeField(this.doc.data.attributes[key], attribPath);
+          removeField(this.object.data.attributes[key], attribPath);
           this.fireChanged(path);
           return;
         }
@@ -229,7 +230,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
               const incIndex = this.findIncludeIndex(identifier);
               if (incIndex != -1) {
                 removeField(
-                  this.doc.included![incIndex].attributes,
+                  this.object.included![incIndex]!.attributes,
                   attribPath,
                 );
               }
@@ -239,9 +240,9 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
           for (let i = 0; i < rel.object.data.length; i++) {
             const identifier = rel.object.data[i];
             rel.object.data.splice(i, 1);
-            this.removeIncludeIfNotBelongsToOther(identifier);
+            this.removeIncludeIfNotBelongsToOther(identifier!);
           }
-          this.doc.data.relationships![rel.path].data = null;
+          this.object.data.relationships![rel.path]!.data = null;
         }
         this.fireChanged(path);
       } else {
@@ -252,11 +253,14 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
         }
         if (attribPath.length === 0) {
           this.removeIncludeIfNotBelongsToOther(identifier);
-          this.doc.data.relationships![rel.path].data = null;
+          this.object.data.relationships![rel.path]!.data = null;
         } else {
           const incIndex = this.findIncludeIndex(identifier);
           if (incIndex != -1) {
-            removeField(this.doc.included![incIndex].attributes, attribPath);
+            removeField(
+              this.object.included![incIndex]!.attributes,
+              attribPath,
+            );
           }
         }
         this.fireChanged(path);
@@ -264,50 +268,74 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
     }
   };
 
-  handleSubmit = (e: FormEvent) => {
+  override handleSubmit = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!this.doc?.data) {
-      return;
+    this.submit().then(
+      (value) => {
+        if (this.onSubmitSuccess) {
+          this.onSubmitSuccess(value);
+        }
+      },
+      (error) => {
+        if (this.onSubmitError !== undefined) {
+          this.onSubmitError(error);
+        }
+      },
+    );
+  };
+
+  override submit = () => {
+    if (!this.object?.data) {
+      return new Promise<SingleResourceDoc | null>(() => {});
     }
-    if (this.onSubmit && this.doc.data) {
-      this.onSubmit(this.doc.data);
+    if (this.onSubmit) {
+      this.onSubmit(this.object);
     }
-    this.submitResource();
+    return this.submitResource();
   };
 
   getLink(path: string): unknown {
-    if (!this.doc?.data?.links) {
+    if (!this.object?.data?.links) {
       return;
     }
-    return getValue(this.doc.data.links, path);
+    return getValue(this.object.data.links, path);
+  }
+
+  getResourceId() {
+    return this.object?.data.id;
+  }
+
+  hasResourceId() {
+    const id = this.getResourceId();
+    return id != undefined && id !== "";
   }
 
   private findAttribute(
     path: string,
   ): { value: Value; path: string } | undefined {
-    if (!this.doc?.data?.attributes) {
+    if (!this.object?.data?.attributes) {
       return undefined;
     }
-    for (const key in this.doc.data.attributes) {
+    for (const key in this.object.data.attributes) {
       if (path.startsWith(key)) {
-        return { value: this.doc.data.attributes[key], path: key };
+        return { value: this.object.data.attributes[key]!, path: key };
       }
     }
     return undefined;
   }
   private removeIncludeIfNotBelongsToOther(id: ResourceIdentifierObject) {
-    if (!this.doc) {
+    if (!this.object) {
       return;
     }
     let refCount = 0;
-    for (const key in this.doc.data.relationships) {
-      const otherRel = this.doc.data.relationships[key];
-      if (!otherRel.data) {
+    for (const key in this.object.data.relationships) {
+      const otherRel = this.object.data.relationships[key];
+      if (!otherRel!.data) {
         continue;
       }
-      if (Array.isArray(otherRel.data)) {
-        for (const otherIdentifier of otherRel.data) {
+      if (Array.isArray(otherRel!.data)) {
+        for (const otherIdentifier of otherRel!.data) {
           if (isSameId(otherIdentifier, id)) {
             refCount++;
             if (refCount > 1) {
@@ -316,7 +344,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
           }
         }
       } else {
-        const otherIdentifier = otherRel.data as ResourceIdentifierObject;
+        const otherIdentifier = otherRel!.data as ResourceIdentifierObject;
         if (isSameId(otherIdentifier, id)) {
           refCount++;
           if (refCount > 1) {
@@ -326,9 +354,9 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
       }
     }
     if (refCount < 2) {
-      this.doc!.included = this.doc!.included?.filter(
+      this.object!.included = this.object!.included!.filter(
         (inc) => inc.type !== id.type || inc.id !== id.id || inc.lid !== id.lid,
-      );
+      )!;
     }
   }
 
@@ -336,7 +364,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
     path: string,
     value: ResourceObject | ResourceObject[],
   ) => {
-    if (!this.doc?.data) {
+    if (!this.object?.data) {
       return;
     }
     const rel = this.findRelationship(path);
@@ -352,22 +380,22 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
       if (rel) {
         rel.object.data = ids;
       } else {
-        if (!this.doc.data.relationships) {
-          this.doc.data.relationships = {} satisfies RelationshipsObject;
+        if (!this.object.data.relationships) {
+          this.object.data.relationships = {} satisfies RelationshipsObject;
         }
-        this.doc.data.relationships[path] = {
+        this.object.data.relationships[path] = {
           data: ids,
         };
       }
-      if (!this.doc?.included) {
-        this.doc.included = value;
+      if (!this.object?.included) {
+        this.object.included = value;
       } else {
         for (const obj of value) {
           const includeIndex = this.findIncludeIndex(obj);
           if (includeIndex != -1) {
-            this.doc.included[includeIndex] = obj;
+            this.object.included[includeIndex] = obj;
           } else {
-            this.doc!.included.push(obj);
+            this.object!.included.push(obj);
           }
         }
       }
@@ -378,10 +406,10 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
         identifier.type = value.type;
         identifier.lid = value.lid;
       } else {
-        if (!this.doc.data.relationships) {
-          this.doc.data.relationships = {} satisfies RelationshipsObject;
+        if (!this.object.data.relationships) {
+          this.object.data.relationships = {} satisfies RelationshipsObject;
         }
-        this.doc.data.relationships[path] = {
+        this.object.data.relationships[path] = {
           data: {
             id: value.id,
             type: value.type,
@@ -389,15 +417,15 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
           },
         } satisfies RelationshipObject;
       }
-      if (!this.doc?.included) {
-        this.doc.included = [];
-        this.doc.included.push(value);
+      if (!this.object?.included) {
+        this.object.included = [];
+        this.object.included.push(value);
       } else {
         const includeIndex = this.findIncludeIndex(value);
         if (includeIndex != -1) {
-          this.doc!.included[includeIndex] = value;
+          this.object!.included[includeIndex] = value;
         } else {
-          this.doc!.included.push(value);
+          this.object!.included.push(value);
         }
       }
     }
@@ -407,11 +435,11 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
   private findRelationship(
     path: string,
   ): { object: RelationshipObject; path: string } | undefined {
-    if (!this.doc?.data?.relationships) {
+    if (!this.object?.data?.relationships) {
       return undefined;
     }
-    for (const key in this.doc.data.relationships) {
-      const relationship = this.doc.data.relationships[key];
+    for (const key in this.object.data.relationships) {
+      const relationship = this.object.data.relationships[key];
       if (path.startsWith(key)) {
         return {
           object: relationship as unknown as RelationshipObject,
@@ -423,26 +451,26 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
   }
 
   private findRelationshipId(path: string): RelationshipMatch | undefined {
-    if (!this.doc?.data?.relationships) {
+    if (!this.object?.data?.relationships) {
       return undefined;
     }
-    for (const key in this.doc.data.relationships) {
-      const relationship = this.doc.data.relationships[key];
+    for (const key in this.object.data.relationships) {
+      const relationship = this.object.data.relationships[key];
       if (path.startsWith(key)) {
         let subPath = path.substring(key.length);
         if (subPath[0] === ".") {
           subPath = subPath.substring(1);
         }
-        if (Array.isArray(relationship.data)) {
+        if (Array.isArray(relationship!.data)) {
           if (subPath.startsWith("[")) {
             const closingBracket = subPath.indexOf("]");
             const elemIdx = +subPath.substring(1, closingBracket);
             subPath = subPath.substring(closingBracket + 1);
-            if (elemIdx >= relationship.data.length) {
+            if (elemIdx >= relationship!.data.length) {
               return undefined;
             }
             return {
-              ids: [relationship.data[elemIdx]],
+              ids: [relationship!.data[elemIdx]!],
               path: key + `[${elemIdx}]`,
               isArray: false,
             };
@@ -452,7 +480,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
               path: key,
               isArray: true,
             } satisfies RelationshipMatch;
-            for (const id of relationship.data) {
+            for (const id of relationship!.data) {
               result.ids.push(id);
             }
             return result;
@@ -461,7 +489,7 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
           }
         } else {
           return {
-            ids: [relationship.data as unknown as ResourceIdentifierObject],
+            ids: [relationship!.data as unknown as ResourceIdentifierObject],
             path: key,
             isArray: false,
           };
@@ -472,46 +500,36 @@ export class DocumentForm extends SingleObjectForm<ResourceObject> {
   }
 
   private findIncludeIndex(id: ResourceIdentifierObject) {
-    if (!this.doc?.included) {
+    if (!this.object?.included) {
       return -1;
     }
     if (!id) {
       return -1;
     }
-    for (let i = 0; i < this.doc.included.length; i++) {
-      if (isSameId(this.doc.included[i], id)) {
+    for (let i = 0; i < this.object.included.length; i++) {
+      if (isSameId(this.object.included[i]!, id)) {
         return i;
       }
     }
     return -1;
   }
 
-  private submitResource = () => {
-    if (!this.doc?.data) {
-      return;
+  private submitResource = async (): Promise<SingleResourceDoc | null> => {
+    if (!this.object?.data) {
+      return new Promise<SingleResourceDoc | null>(() => {});
     }
-    const saveDoc = createDocument(this.doc.data, this.doc.included);
+    const saveDoc = createDocument(this.object.data, this.object.included);
     const endpoint = this.apiUrl
       ? this.apiUrl
-      : (this.doc.data.links!.self as string);
+      : (this.object.data.links!["self"] as string);
 
-    (this.doc.data.id == "" || this.doc.data.id == undefined
-      ? createResource(endpoint, saveDoc)
-      : updateResource(endpoint, saveDoc)
-    ).then(
-      (value) => {
-        if (this.onSubmitSuccess) {
-          const doc = value as SingleResourceDoc;
-          const newData = doc.data;
-          this.onSubmitSuccess(newData);
-        }
-      },
-      (error) => {
-        if (this.onSubmitError !== undefined) {
-          this.onSubmitError(error);
-        }
-      },
-    );
+    const value = await (this.hasResourceId()
+      ? updateResource(endpoint, saveDoc)
+      : createResource(endpoint, saveDoc));
+    if (value) {
+      return value as SingleResourceDoc;
+    }
+    return new Promise<SingleResourceDoc | null>(() => {});
   };
 }
 function isBaseAttribute(name: string) {

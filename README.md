@@ -2,15 +2,14 @@
 
 # ts-jsonapi-form
 
-**js-jsonapi-form** is a TypeScript-based library that simplifies working with JSON:API `ResourceObject`s in React
-applications. It abstracts the request logic, error handling, and typing.
+**js-jsonapi-form** is a TypeScript-based library that simplifies working with JSON:API `ResourceObject`s
+web applications. It abstracts the request logic, error handling, and typing.
 
 ## ✨ Features
 
 - Strongly typed access to JSON:API resources
 - Built-in hooks for loading and managing data
 - Integrated error and loading state handling
-- Based on modern React, TanStack Query, and Wouter
 - Ideal for building form-driven apps with API-backed resources
 
 ## 📦 Installation
@@ -33,7 +32,7 @@ Accept: application/vnd.api+json
 you can do the following
 
 ```ts
-import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi.ts";
+import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi";
 
 fetchResource("http://example.com/articles", {
   filter: { name: "ts-jsonapi-form" },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DocumentForm } from "./DocumentForm.ts";
+import { DocumentForm } from "./DocumentForm";
 import {
   Included,
   LinkObject,
@@ -11,6 +11,7 @@ import {
 
 const Herbert = {
   id: "2",
+  lid: undefined,
   type: "human",
   attributes: {
     name: "Herbert",
@@ -21,18 +22,21 @@ const Herbert = {
 
 const Heidi = {
   id: "4",
+  lid: undefined,
   type: "human",
   attributes: { name: "Heidi" },
 } satisfies ResourceObject;
 
 const Emily = {
   id: "5",
+  lid: undefined,
   type: "human",
   attributes: { name: "Emily" },
 } satisfies ResourceObject;
 
 const obj = {
   id: "1",
+  lid: undefined,
   type: "car",
   attributes: {
     name: "Willy",
@@ -41,11 +45,15 @@ const obj = {
   },
   relationships: {
     driver: {
-      data: { id: "2", type: "human" },
+      data: { id: "2", lid: undefined, type: "human" },
     },
     passengers: {
       data: [
-        { id: Heidi.id, type: Heidi.type } satisfies ResourceIdentifierObject,
+        {
+          id: Heidi.id,
+          lid: undefined,
+          type: Heidi.type,
+        } satisfies ResourceIdentifierObject,
       ],
     },
   },
@@ -59,6 +67,7 @@ const obj = {
 
 const DuftHaus = {
   id: "4711",
+  lid: undefined,
   type: "building",
   attributes: { name: "Dufthaus 4711", yearOfConstruction: 1792 },
 } satisfies ResourceObject;
@@ -67,6 +76,10 @@ const included: Included = [Herbert, DuftHaus, Heidi] satisfies Included;
 const doc = {
   data: obj,
   included: included,
+  jsonapi: undefined,
+  links: undefined,
+  meta: undefined,
+  errors: undefined,
 } satisfies SingleResourceDoc;
 
 describe("getValue", () => {
@@ -145,10 +158,12 @@ describe("setValue", () => {
     });
 
     form.setValue("driver.name", "Gunther");
-    expect(testDoc.included[0].attributes!["name"]).toBe("Gunther");
+    expect(testDoc.included[0]?.attributes!["name"]).toBe("Gunther");
 
     form.setValue("driver.skills.drift", "pro");
-    expect(testDoc.included[0].attributes!["skills"]).toEqual({ drift: "pro" });
+    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({
+      drift: "pro",
+    });
   });
 
   it("should set attribute array value", () => {
@@ -173,7 +188,7 @@ describe("setValue", () => {
 
     form.setValue("driver.titles[1]", "Master");
 
-    expect(testDoc.included[0].attributes!["titles"]).toEqual([
+    expect(testDoc.included[0]?.attributes!["titles"]).toEqual([
       "Sir",
       "Master",
     ]);
@@ -189,7 +204,7 @@ describe("setValue", () => {
 
     // @ts-expect-error too dynamic for the ide
     expect(testDoc.data.relationships!["passenger"]).toEqual({
-      data: { id: Heidi.id, type: Heidi.type },
+      data: { id: Heidi.id, lid: undefined, type: Heidi.type },
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
   });
@@ -204,8 +219,8 @@ describe("setValue", () => {
 
     expect(testDoc.data.relationships!["passengers"]).toEqual({
       data: [
-        { id: Heidi.id, type: Heidi.type },
-        { id: Emily.id, type: Emily.type },
+        { id: Heidi.id, lid: undefined, type: Heidi.type },
+        { id: Emily.id, lid: undefined, type: Emily.type },
       ],
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
@@ -221,7 +236,7 @@ describe("setValue", () => {
     form.setValue("driver", Emily);
 
     expect(testDoc.data.relationships!["driver"]).toEqual({
-      data: { id: Emily.id, type: Emily.type },
+      data: { id: Emily.id, lid: undefined, type: Emily.type },
     } satisfies RelationshipObject);
     expect(testDoc.included[0]).toEqual(Herbert);
     expect(testDoc.included[3]).toEqual(Emily);
@@ -233,7 +248,7 @@ describe("setValue", () => {
     testDoc.data.relationships.driver.data.id = "3"; // change to rechange
     const form = new DocumentForm({
       document: testDoc,
-      onChange: (_newState: ResourceObject | null, path: string) => {
+      onChange: (_newState: SingleResourceDoc | null, path: string) => {
         changedPath = path;
       },
     });
@@ -290,13 +305,13 @@ describe("removeValue", () => {
     });
 
     form.removeValue("driver.name");
-    expect(testDoc.included[0].attributes!["name"]).toBe(undefined);
+    expect(testDoc.included[0]?.attributes!["name"]).toBe(undefined);
 
     form.removeValue("driver.skills.drift");
-    expect(testDoc.included[0].attributes!["skills"]).toEqual({});
+    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({});
 
     form.removeValue("passengers[0].name");
-    expect(testDoc.included[2].attributes!["name"]).toBeUndefined();
+    expect(testDoc.included[2]?.attributes!["name"]).toBeUndefined();
 
     form.removeValue("passengers[0]");
     expect(testDoc.data.relationships.passengers).toEqual({ data: [] });
@@ -323,7 +338,7 @@ describe("removeValue", () => {
     const testDoc = structuredClone(doc);
     const form = new DocumentForm({
       document: testDoc,
-      onChange: (_newState: ResourceObject | null, path: string) => {
+      onChange: (_newState: SingleResourceDoc | null, path: string) => {
         changedPath = path;
       },
     });

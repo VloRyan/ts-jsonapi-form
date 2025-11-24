@@ -1,5 +1,5 @@
 import { ObjectLike, Value } from "./model/";
-import { FetchOpts, Page } from "./JsonApi.ts";
+import { FetchOpts, Page } from "./JsonApi";
 
 export const extractFilter = (search: string) => {
   if (!search) {
@@ -11,12 +11,12 @@ export const extractFilter = (search: string) => {
     .filter((value) => value.startsWith("filter["))
     .forEach((value) => {
       const parts = value.split("=");
-      const name = parts[0].substring("filter[".length, parts[0].length - 1);
+      const name = parts[0]!.substring("filter[".length, parts[0]!.length - 1);
       const nodes = name.split(".");
       let currentObject = filter;
-      const nodeValue = parseValue(decodeURIComponent(parts[1]));
+      const nodeValue = parseValue(decodeURIComponent(parts[1]!));
       for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
+        const node = nodes[i]!;
         if (i < nodes.length - 1) {
           if (currentObject[node] === undefined) {
             currentObject[node] = {};

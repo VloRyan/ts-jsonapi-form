@@ -1,4 +1,4 @@
-import { AtomicOperationsDocument } from "./model/Document.ts";
+import { AtomicOperationsDocument } from "./model/Document";
 
 import {
   InvalidServerResponseError,

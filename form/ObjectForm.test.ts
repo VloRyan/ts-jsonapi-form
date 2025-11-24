@@ -184,7 +184,9 @@ describe("handleChange", () => {
     const newValue = "Another value";
 
     form.handleChange({
-      currentTarget: { type: "text", name: "text", value: newValue },
+      type: "text",
+      name: "text",
+      value: newValue,
     } as unknown as HTMLInputElement);
 
     expect(testObject.text).toBe(newValue);
@@ -198,11 +200,9 @@ describe("handleChange", () => {
     const newValue = 88;
 
     form.handleChange({
-      currentTarget: {
-        type: "number",
-        name: "number",
-        valueAsNumber: newValue,
-      },
+      type: "number",
+      name: "number",
+      valueAsNumber: newValue,
     } as unknown as HTMLInputElement);
 
     expect(testObject.number).toBe(newValue);
@@ -215,11 +215,9 @@ describe("handleChange", () => {
     });
 
     form.handleChange({
-      currentTarget: {
-        type: "date",
-        name: "date",
-        value: "2025-01-01",
-      },
+      type: "date",
+      name: "date",
+      value: "2025-01-01",
     } as unknown as HTMLInputElement);
 
     expect(testObject.date).toEqual("2025-01-01T00:00:00Z");
@@ -232,11 +230,9 @@ describe("handleChange", () => {
     });
 
     form.handleChange({
-      currentTarget: {
-        type: "date",
-        name: "date",
-        value: "",
-      },
+      type: "date",
+      name: "date",
+      value: "",
     } as unknown as HTMLInputElement);
 
     expect(testObject.date).toBeUndefined();
@@ -249,11 +245,9 @@ describe("handleChange", () => {
     });
 
     form.handleChange({
-      currentTarget: {
-        type: "datetime-local",
-        name: "dateTime",
-        value: "2025-01-01T02:30", // in UTC+01:00
-      },
+      type: "datetime-local",
+      name: "dateTime",
+      value: "2025-01-01T02:30", // in UTC+01:00
     } as unknown as HTMLInputElement);
 
     expect(testObject.dateTime).toEqual("2025-01-01T01:30:00Z");
@@ -267,11 +261,9 @@ describe("handleChange", () => {
     const newValue = false;
 
     form.handleChange({
-      currentTarget: {
-        type: "checkbox",
-        name: "bool",
-        checked: newValue,
-      },
+      type: "checkbox",
+      name: "bool",
+      checked: newValue,
     } as unknown as HTMLInputElement);
 
     expect(testObject.bool).toBe(newValue);

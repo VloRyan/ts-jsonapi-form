@@ -12,11 +12,11 @@ jobs:
           node-version: 24.7.0 # @see https://github.com/npm/cli/issues/8767
       - name: Install dependencies
         run: npm i && npm ci
-      - name: Build
-        run: npm run build
       - name: Test
         run: npm test
       - name: Lint
-        run: npm run lint
+        run: npx eslint --version && npm run lint
       - name: Check fmt
         run: npm run fmt
+      - name: Build
+        run: npm run build

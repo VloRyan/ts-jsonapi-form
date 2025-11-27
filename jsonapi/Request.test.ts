@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { FetchOpts, Page } from "./";
+import type { FetchOpts, Page } from "./";
 import { extractFetchOpts, extractFilter, extractPage } from "./Request";
-import { ObjectLike } from "./model/";
+import type { ObjectLike } from "./model/";
 
 describe("extractFilter", () => {
   it("should return undefined on empty query", async () => {

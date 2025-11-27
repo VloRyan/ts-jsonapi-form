@@ -1,4 +1,4 @@
-import { Document } from "../jsonapi/model/";
+import type { Document } from "../jsonapi/model/";
 
 export interface PageMetaData {
   limit: number;

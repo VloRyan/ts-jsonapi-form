@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DocumentForm } from "./DocumentForm";
-import {
+import type {
   Included,
   LinkObject,
   RelationshipObject,

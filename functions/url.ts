@@ -1,8 +1,8 @@
 import { trimPrefix, trimSuffix } from "./";
 import {
-  ObjectLike,
+  type ObjectLike,
   isResourceObject,
-  ResourceIdentifierObject,
+  type ResourceIdentifierObject,
 } from "../jsonapi/model";
 
 const protocolRegEx = /\w+:\/\//g;

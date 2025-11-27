@@ -1,4 +1,4 @@
-import { Link } from "./Types";
+import type { Link } from "./Types";
 
 export interface Links {
   self?: Link;

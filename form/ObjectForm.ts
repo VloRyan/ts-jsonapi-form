@@ -1,5 +1,5 @@
 import { getValue, removeField, setValue } from "./Value";
-import { ObjectLike } from "../jsonapi/model/";
+import type { ObjectLike } from "../jsonapi/model/";
 
 export type FormControlElement =
   | HTMLInputElement

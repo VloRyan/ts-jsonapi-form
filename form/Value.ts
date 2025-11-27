@@ -1,4 +1,4 @@
-import { ObjectLike } from "../jsonapi/model/";
+import type { ObjectLike } from "../jsonapi/model/";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getValue = (obj: any, path: string) => {

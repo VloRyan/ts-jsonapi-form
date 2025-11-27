@@ -1,13 +1,13 @@
 import {
   buildQueryString,
-  FetchOpts,
+  type FetchOpts,
   fetchResource,
   findInclude,
   MEDIA_TYPE,
 } from "./JsonApi";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
-import {
+import type {
   ApiError,
   Included,
   ResourceIdentifierObject,

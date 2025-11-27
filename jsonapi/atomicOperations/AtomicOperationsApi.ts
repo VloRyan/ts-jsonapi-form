@@ -1,4 +1,4 @@
-import { AtomicOperationsDocument } from "./model/Document";
+import type { AtomicOperationsDocument } from "./model/Document";
 
 import {
   InvalidServerResponseError,

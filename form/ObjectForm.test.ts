@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SingleObjectForm } from "./ObjectForm";
-import { ResourceObject } from "../jsonapi/model";
+import type { ResourceObject } from "../jsonapi/model";
 
 interface TestObject {
   name?: string;

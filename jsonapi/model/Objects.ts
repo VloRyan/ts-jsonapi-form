@@ -1,5 +1,5 @@
-import { Links, LinksObject } from "./Links";
-import { MetaObject, ObjectLike, Value } from "./Types";
+import type { Links, LinksObject } from "./Links";
+import type { MetaObject, ObjectLike, Value } from "./Types";
 
 export interface ResourceIdentifierObject {
   id: string;

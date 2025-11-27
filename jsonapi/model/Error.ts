@@ -1,5 +1,5 @@
-import { MetaObject } from "./Types";
-import { LinksObject } from "./Links";
+import type { MetaObject } from "./Types";
+import type { LinksObject } from "./Links";
 
 export interface ErrorObject {
   id?: number | string;

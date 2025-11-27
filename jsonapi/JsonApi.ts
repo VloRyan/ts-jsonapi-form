@@ -1,10 +1,10 @@
 import {
-  Document as APIDocument,
-  Included,
+  type Document as APIDocument,
+  type Included,
   ApiError,
-  ResourceIdentifierObject,
+  type ResourceIdentifierObject,
   isSameId,
-  ObjectLike,
+  type ObjectLike,
 } from "./model";
 import { StatusCodes } from "http-status-codes";
 

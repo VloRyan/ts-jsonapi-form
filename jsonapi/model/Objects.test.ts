@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   isResourceObject,
   isSameId,
-  ResourceIdentifierObject,
-  ResourceObject,
+  type ResourceIdentifierObject,
+  type ResourceObject,
 } from "./Objects";
-import { ObjectLike } from "./Types";
+import type { ObjectLike } from "./Types";
 
 describe("isResourceObject", () => {
   it("should return true on ResourceObject", async () => {

@@ -3,13 +3,13 @@ import {
   createDocument,
   isResourceObject,
   isSameId,
-  ObjectLike,
-  RelationshipObject,
-  RelationshipsObject,
-  ResourceIdentifierObject,
-  ResourceObject,
-  SingleResourceDoc,
-  Value,
+  type ObjectLike,
+  type RelationshipObject,
+  type RelationshipsObject,
+  type ResourceIdentifierObject,
+  type ResourceObject,
+  type SingleResourceDoc,
+  type Value,
 } from "../jsonapi/model/";
 import { getValue, removeField, setValue } from "./Value";
 

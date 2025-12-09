@@ -134,22 +134,12 @@ function printDocument(doc: SingleResourceDoc) {
   console.log("Author name: " + author.firstname + " " + form.getValue("author.lastName")); //... attributes by path
 
   console.log("Second comment: " + form.getValue("comments[1].body")); // arrays the also supported
+
   form.setValue("comments[1].body", "Super duppa comment") // setting values works the same way
 }
 ```
 
 For more examples see [form/DocumentForm.test.ts](./form/DocumentForm.test.ts)
-
-### Use it in HTML(React):
-
-```html
-
-<form {...form.setup()}>
-  <input type="text" name="title" defaultValue={form.getValue("title")} onChange={form.handleChange}>
-</form>
-```
-
-In practice better wrap input creation like in [boot-api-ts](https://github.com/VloRyan/boot-api-ts)
 
 ## 🛠 Technologies
 

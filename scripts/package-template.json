@@ -1,0 +1,14 @@
+{
+  "name": "@vloryan/ts-jsonapi-form",
+  "version": "###REPLACE###",
+  "author": "VloRyan",
+  "type": "module",
+  "homepage": "https://github.com/VloRyan/ts-jsonapi-form#readme",
+  "bugs": {
+    "url": "https://github.com/VloRyan/ts-jsonapi-form/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VloRyan/ts-jsonapi-form.git"
+  }
+}

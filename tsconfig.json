@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "composite": true,
     "target": "ES2024",
     "lib": ["ES2024", "DOM", "DOM.Iterable"],
     /* Modules */
@@ -40,6 +39,6 @@
     /* Completeness */
     "skipLibCheck": true,
   },
-  "include": ["form/**/*.ts", "function/**/*.tss", "jsonapi/**/*.ts"],
+  "include": ["form/**/*.ts", "functions/**/*.ts", "jsonapi/**/*.ts"],
   "exclude": ["node_modules"],
 }

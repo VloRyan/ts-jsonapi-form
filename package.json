@@ -1,6 +1,6 @@
 {
   "name": "@vloryan/ts-jsonapi-form",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
   "author": "VloRyan",
   "type": "module",
   "homepage": "https://github.com/VloRyan/ts-jsonapi-form#readme",
@@ -12,13 +12,14 @@
     "url": "git+https://github.com/VloRyan/ts-jsonapi-form.git"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup && node ./scripts/generate-package-json.cjs",
     "lint": "eslint . --config=./eslint.config.mts --report-unused-disable-directives --max-warnings 0",
     "fmt": "prettier **/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,yml,yaml} --check --no-error-on-unmatched-pattern",
     "fmt-write": "prettier **/*.{js,ts,jsx,tsx,cjs,cts,mjs,mts,yml,yaml} --write --no-error-on-unmatched-pattern",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "publish": "publish --access public"
+    "publish": "cd dist && npm publish --access public",
+    "bump-alpha": "npm version prerelease --preid alpha"
   },
   "dependencies": {
     "http-status-codes": "^2.3.0"
@@ -30,9 +31,24 @@
     "jiti": "^2.4.2",
     "jsdom": "^26.1.0",
     "prettier": "3.1.1",
+    "tsup": "^8.5.1",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vitest": "^3.2.3",
     "vitest-fetch-mock": "^0.3.0"
+  },
+  "tsup": {
+    "entry": [
+      "jsonapi/**/!(*.test).ts",
+      "form/**/!(*.test).ts",
+      "functions/**/!(*.test).ts"
+    ],
+    "splitting": false,
+    "sourcemap": true,
+    "clean": true,
+    "dts": true,
+    "format": [
+      "esm"
+    ]
   }
 }

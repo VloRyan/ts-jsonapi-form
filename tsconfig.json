@@ -5,7 +5,6 @@
     /* Modules */
     "module": "ES2022",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
 
     "declaration": true,
     "declarationMap": true,

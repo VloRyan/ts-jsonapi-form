@@ -165,6 +165,15 @@ export class SingleResourceDocumentAccessor {
     return id != undefined && id !== "";
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getObjectMetaValue(path: string): any | undefined {
+    return new ResourceObjectAccessor(this.document.data).getMetaValue(path);
+  }
+
+  public setObjectMetaValue(path: string, value: Value) {
+    new ResourceObjectAccessor(this.document.data).setMetaValue(path, value);
+  }
+
   private resolveRelationshipForPath(
     path: string,
   ): ResolvedRelationship | null {

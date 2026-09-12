@@ -97,7 +97,8 @@ export class ResourceObjectAccessor {
     return id != undefined && id !== "";
   }
 
-  public getMetaValue(path: string): unknown {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getMetaValue(path: string): any {
     if (!this.object) {
       return null;
     }
@@ -105,11 +106,11 @@ export class ResourceObjectAccessor {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public setMetaValue(path: string, value: any): unknown {
+  public setMetaValue(path: string, value: any) {
     if (!this.object) {
-      return null;
+      return;
     }
-    return setValue(this.object.meta, path, value);
+    setValue(this.object.meta, path, value);
   }
 
   public getRelationship(path: string): RelationshipObject | null {

@@ -1,20 +1,19 @@
-import { createResource, updateResource } from "../jsonapi/";
+import { createResource, updateResource } from "@jsonapi/JsonApi";
 import {
   createDocument,
   type ResourceObject,
   type SingleResourceDoc,
   type Value,
-} from "../jsonapi/model/";
+} from "@jsonapi/model";
 
-import { SingleObjectForm } from "./ObjectForm";
-import { SingleResourceDocumentAccessor } from "./SingleResourceDocumentAccessor";
+import { SingleResourceDocumentAccessor } from "@form/SingleResourceDocumentAccessor";
+import { SingleObjectForm } from "@form/ObjectForm";
 
 export interface DocumentFormProps {
   document: SingleResourceDoc | null;
   name?: string;
   /** id of the form */
   id?: string;
-  onChange?: (object: SingleResourceDoc | null, path: string) => void;
   onSubmit?: (object: SingleResourceDoc) => void;
   onSubmitSuccess?: (object: SingleResourceDoc | null) => void;
   onSubmitError?: (error: Error) => void;
@@ -24,8 +23,7 @@ export interface DocumentFormProps {
 export class DocumentForm extends SingleObjectForm<SingleResourceDoc> {
   //doc: SingleResourceDoc | null;
   private readonly onSubmitSuccess:
-    | ((object: SingleResourceDoc | null) => void)
-    | undefined;
+    ((object: SingleResourceDoc | null) => void) | undefined;
   private readonly onSubmitError?: ((error: Error) => void) | undefined;
   private readonly apiUrl: string;
   private readonly document: SingleResourceDocumentAccessor | null = null;
@@ -47,24 +45,14 @@ export class DocumentForm extends SingleObjectForm<SingleResourceDoc> {
   }
 
   override getValue(path: string): unknown {
-    if (!this.document) {
-      return null;
-    }
-    return this.document.getObjectValue(path);
+    return this.document ? this.document.getObjectValue(path) : null;
   }
 
   override setValue = (path: string, value: Value | ResourceObject[]) => {
     if (!this.document) {
       return;
     }
-    this.document.setObjectValue(path, value, () => this.fireChanged(path));
-  };
-
-  override removeValue = (path: string) => {
-    if (!this.document) {
-      return;
-    }
-    this.document.removeObjectValue(path, () => this.fireChanged(path));
+    this.document.setObjectValue(path, value);
   };
 
   override handleSubmit = (e: Event) => {
@@ -111,7 +99,7 @@ export class DocumentForm extends SingleObjectForm<SingleResourceDoc> {
       ? this.apiUrl
       : (this.object.data.links!["self"] as string);
 
-    const value = await (this.document?.hasResourceId() ?? false
+    const value = await ((this.document?.hasResourceId() ?? false)
       ? updateResource(endpoint, saveDoc)
       : createResource(endpoint, saveDoc));
     if (value) {

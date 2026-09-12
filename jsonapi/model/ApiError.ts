@@ -1,4 +1,4 @@
-import type { Errors } from "./Document";
+import type { Errors } from "@jsonapi/model";
 
 export class ApiError extends Error {
   errors: Errors;

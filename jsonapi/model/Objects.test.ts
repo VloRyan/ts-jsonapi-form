@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   isResourceObject,
   isSameId,
+  type ObjectLike,
   type ResourceIdentifierObject,
   type ResourceObject,
-} from "./Objects";
-import type { ObjectLike } from "./Types";
+} from "@jsonapi/model";
 
 describe("isResourceObject", () => {
   it("should return true on ResourceObject", async () => {

@@ -4,7 +4,7 @@ import {
   fetchResource,
   findInclude,
   MEDIA_TYPE,
-} from "./JsonApi";
+} from "@jsonapi";
 import { assert, beforeEach, describe, expect, it, test } from "vitest";
 import "vitest-fetch-mock";
 import type {
@@ -13,7 +13,7 @@ import type {
   ResourceIdentifierObject,
   ResourceObject,
   SingleResourceDoc,
-} from "./model/";
+} from "@jsonapi/model";
 
 describe("fetchResource", () => {
   beforeEach(() => {
@@ -86,7 +86,7 @@ describe("fetchResource", () => {
   });
 
   it("should return null", async () => {
-    fetchMock.mockResponseOnce("", {
+    fetchMock.mockResponseOnce({
       status: 204,
     });
 

@@ -1,4 +1,4 @@
-import type { Link } from "./Types";
+import type { Link } from "@jsonapi/model";
 
 export interface Links {
   self?: Link;

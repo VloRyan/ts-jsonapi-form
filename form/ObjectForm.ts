@@ -1,12 +1,10 @@
-import { getValue, removeField, setValue } from "./Value";
-import type { ObjectLike } from "../jsonapi/model/";
+import { getValue, setValue } from "@functions/object";
+import type { ObjectLike } from "@jsonapi/model";
 
 export type FormControlElement =
-  | HTMLInputElement
-  | HTMLTextAreaElement
-  | HTMLSelectElement;
+  HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
-export type settableValue =
+export type SetableValue =
   | string
   | number
   | boolean
@@ -22,14 +20,12 @@ export type settableValue =
 export interface ObjectForm<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue(path: string): any;
-  setValue(path: string, value: settableValue): void;
-  removeValue(path: string): void;
-  onChangePath(exp: RegExp, callback: () => void | null): void;
+  setValue(path: string, value: SetableValue): void;
   handleChangeEvent(event: Event): void;
   handleChange(element: HTMLInputElement): void;
   handleSubmit(e: Event): void;
   submit(): Promise<T | null>;
-  withOffset(offset: string): ObjectForm<T>;
+  withPathOffset(offset: string): ObjectForm<T>;
   isEmpty(): boolean;
 
   setup(): {
@@ -45,30 +41,18 @@ export interface SingleObjectFormProps<T> {
   name?: string;
   /** id of the form */
   id?: string;
-  onChange?: (object: T | null, path: string) => void;
   onSubmit?: (object: T) => void;
-}
-
-export interface ChangePathHandler {
-  expression: RegExp;
-  callback: () => void;
 }
 
 export class SingleObjectForm<T> implements ObjectForm<T> {
   object: T | null;
   id: string | undefined;
-  protected readonly onChange:
-    | ((object: T | null, path: string) => void)
-    | undefined;
   protected readonly onSubmit: ((object: T) => void) | undefined;
-  protected onChangePathHandler: ChangePathHandler[];
 
   constructor(props: SingleObjectFormProps<T>) {
     this.id = props.id;
     this.object = props.object;
-    this.onChange = props.onChange;
     this.onSubmit = props.onSubmit;
-    this.onChangePathHandler = [] satisfies ChangePathHandler[];
   }
 
   setup(): {
@@ -92,34 +76,12 @@ export class SingleObjectForm<T> implements ObjectForm<T> {
     return getValue(this.object, path);
   }
 
-  setValue(path: string, value: settableValue): void {
+  setValue(path: string, value: SetableValue): void {
     if (!this.object) {
       return;
     }
     setValue(this.object, path, value);
-    this.fireChanged(path);
   }
-
-  removeValue = (path: string) => {
-    if (!this.object) {
-      return;
-    }
-    removeField(this.object, path);
-    this.fireChanged(path);
-  };
-
-  onChangePath = (exp: RegExp, callback: () => void | null) => {
-    if (callback !== null) {
-      this.onChangePathHandler = this.onChangePathHandler.filter(
-        (handler) => handler.expression.source !== exp.source,
-      );
-      this.onChangePathHandler.push({ expression: exp, callback });
-    } else {
-      this.onChangePathHandler = this.onChangePathHandler.filter(
-        (handler) => handler.expression.source !== exp.source,
-      );
-    }
-  };
 
   handleChangeEvent = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -128,7 +90,7 @@ export class SingleObjectForm<T> implements ObjectForm<T> {
 
   handleChange = (element: HTMLInputElement) => {
     const name = element.name;
-    let value: settableValue;
+    let value: SetableValue;
     switch (element.type) {
       case "number":
         value = element.value !== "" ? element.valueAsNumber : null;
@@ -149,11 +111,7 @@ export class SingleObjectForm<T> implements ObjectForm<T> {
       default:
         value = element.value;
     }
-    if (value === null || value === undefined) {
-      this.removeValue(name);
-    } else {
-      this.setValue(name, value);
-    }
+    this.setValue(name, value);
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
@@ -175,19 +133,8 @@ export class SingleObjectForm<T> implements ObjectForm<T> {
     return new Promise<T | null>(() => {});
   };
 
-  withOffset(offset: string): ObjectForm<T> {
-    return new OffsetForm<T>({ form: this, offset: offset });
-  }
-
-  protected fireChanged(path: string) {
-    if (this.onChange) {
-      this.onChange(this.object, path);
-    }
-    this.onChangePathHandler.forEach((handler) => {
-      if (handler.expression.test(path)) {
-        handler.callback();
-      }
-    });
+  withPathOffset(offset: string): ObjectForm<T> {
+    return new PathOffsetForm<T>({ form: this, offset: offset });
   }
 }
 
@@ -197,7 +144,7 @@ export interface OffsetFormProps<T> {
   id?: string;
 }
 
-export class OffsetForm<T> implements ObjectForm<T> {
+export class PathOffsetForm<T> implements ObjectForm<T> {
   private readonly form: ObjectForm<T>;
   private readonly offset: string;
   private readonly id: string | undefined;
@@ -231,10 +178,6 @@ export class OffsetForm<T> implements ObjectForm<T> {
   handleChange = (element: HTMLInputElement): void => {
     const value = element.type === "checkbox" ? element.checked : element.value;
     const name = element.name;
-    if (element.type == "date" && !value) {
-      this.form.removeValue(this.offset + name);
-      return;
-    }
     this.form.setValue(this.offset + name, value);
   };
 
@@ -252,22 +195,12 @@ export class OffsetForm<T> implements ObjectForm<T> {
     return this.form.submit();
   };
 
-  removeValue = (path: string): void => {
-    if (!this.form) {
-      return;
-    }
-    this.form.removeValue(this.offset + path);
-  };
-
-  setValue = (path: string, value: settableValue): void => {
+  setValue = (path: string, value: SetableValue): void => {
     if (!this.form) {
       return;
     }
     this.form.setValue(this.offset + path, value);
   };
-  onChangePath(exp: RegExp, callback: () => void) {
-    this.form.onChangePath(exp, callback);
-  }
 
   setup = (): {
     id: string | undefined;
@@ -288,7 +221,7 @@ export class OffsetForm<T> implements ObjectForm<T> {
       id: this.id,
     };
   };
-  withOffset = (offset: string): ObjectForm<T> => {
-    return new OffsetForm({ form: this, offset: this.offset + offset });
+  withPathOffset = (offset: string): ObjectForm<T> => {
+    return new PathOffsetForm({ form: this, offset: this.offset + offset });
   };
 }

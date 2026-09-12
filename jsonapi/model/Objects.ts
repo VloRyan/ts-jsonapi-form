@@ -1,5 +1,10 @@
-import type { Links, LinksObject } from "./Links";
-import type { MetaObject, ObjectLike, Value } from "./Types";
+import type {
+  Links,
+  LinksObject,
+  MetaObject,
+  ObjectLike,
+  Value,
+} from "@jsonapi/model";
 
 export interface ResourceIdentifierObject {
   id: string;
@@ -8,10 +13,7 @@ export interface ResourceIdentifierObject {
 }
 
 export type ResourceLinkage =
-  | null
-  | never[]
-  | ResourceIdentifierObject
-  | ResourceIdentifierObject[];
+  null | never[] | ResourceIdentifierObject | ResourceIdentifierObject[];
 
 export interface RelationshipObject {
   data: ResourceLinkage;
@@ -35,6 +37,7 @@ export interface ResourceObject {
 
 export function isResourceObject(obj: ObjectLike) {
   return (
+    obj &&
     obj["type"] !== undefined &&
     (obj["id"] !== undefined || obj["lid"] !== undefined)
   );
@@ -45,6 +48,12 @@ export function isSameId(
   b: ResourceObject | ResourceIdentifierObject,
 ) {
   return a.type === b.type && a.id === b.id && a.lid === b.lid;
+}
+
+export function toResourceIdentifier(
+  obj: ResourceObject,
+): ResourceIdentifierObject {
+  return { id: obj.id, type: obj.type, lid: obj.lid };
 }
 
 export type AttributesObject<

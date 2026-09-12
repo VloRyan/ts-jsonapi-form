@@ -1,5 +1,4 @@
-import type { MetaObject } from "./Types";
-import type { LinksObject } from "./Links";
+import type { LinksObject, MetaObject } from "@jsonapi/model";
 
 export interface ErrorObject {
   id?: number | string;

@@ -1,11 +1,11 @@
 import type {
-  MetaObject,
-  Links,
-  PaginationLinks,
   Errors,
+  Links,
+  MetaObject,
+  PaginationLinks,
   PrimaryData,
   ResourceIdentifierObject,
-} from "../../model";
+} from "@jsonapi/model";
 
 export type OperationType = "add" | "update" | "remove";
 

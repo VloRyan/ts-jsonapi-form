@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { joinPath, toQueryString } from "./";
-import type { ResourceObject, ObjectLike } from "../jsonapi/model";
+import { joinPath, toQueryString } from "@functions/url";
+import type { ObjectLike, ResourceObject } from "@jsonapi/model";
 
 describe("joinPath", () => {
   it("should leave trailing slash if present", () => {

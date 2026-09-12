@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DocumentForm } from "./DocumentForm";
-import type { RelationshipObject, SingleResourceDoc } from "../jsonapi/model";
-import { doc, DuftHaus, Emily, Heidi, Herbert } from "./test_data";
+import { DocumentForm } from "@form";
+import { type RelationshipObject, toResourceIdentifier } from "@jsonapi/model";
+import { doc, DuftHaus, Emily, Heidi, Herbert } from "@form/test_data";
 
 describe("getValue", () => {
   it("should get attrib value", () => {
@@ -125,7 +125,7 @@ describe("setValue", () => {
 
     // @ts-expect-error too dynamic for the ide
     expect(testDoc.data.relationships!["passenger"]).toEqual({
-      data: { id: Heidi.id, lid: undefined, type: Heidi.type },
+      data: toResourceIdentifier(Heidi),
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
   });
@@ -139,10 +139,7 @@ describe("setValue", () => {
     form.setValue("passengers", [Heidi, Emily]);
 
     expect(testDoc.data.relationships!["passengers"]).toEqual({
-      data: [
-        { id: Heidi.id, lid: undefined, type: Heidi.type },
-        { id: Emily.id, lid: undefined, type: Emily.type },
-      ],
+      data: [toResourceIdentifier(Heidi), toResourceIdentifier(Emily)],
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
     expect(testDoc.included[3]).toEqual(Emily);
@@ -157,55 +154,29 @@ describe("setValue", () => {
     form.setValue("driver", Emily);
 
     expect(testDoc.data.relationships!["driver"]).toEqual({
-      data: { id: Emily.id, lid: undefined, type: Emily.type },
+      data: toResourceIdentifier(Emily),
     } satisfies RelationshipObject);
     expect(testDoc.included[0]).toEqual(Herbert);
     expect(testDoc.included[3]).toEqual(Emily);
   });
 
-  it("should fire onChange", () => {
-    let changedPath = "";
-    const testDoc = structuredClone(doc);
-    testDoc.data.relationships.driver.data.id = "3"; // change to rechange
-    const form = new DocumentForm({
-      document: testDoc,
-      onChange: (_newState: SingleResourceDoc | null, path: string) => {
-        changedPath = path;
-      },
-    });
-
-    form.setValue("name", "Herbie");
-    expect(changedPath).toBe("name");
-
-    form.setValue("driver.id", "2"); // rechange to original
-    expect(changedPath).toBe("driver.id");
-
-    form.setValue("driver.name", "Gunther");
-    expect(changedPath).toBe("driver.name");
-
-    form.setValue("driver.skills.drift", "pro");
-    expect(changedPath).toBe("driver.skills.drift");
-  });
-});
-
-describe("removeValue", () => {
   it("should remove attrib value", () => {
     const testDoc = structuredClone(doc);
     const form = new DocumentForm({
       document: testDoc,
     });
 
-    form.removeValue("type");
-    expect(testDoc.data.type).toBe("");
+    form.setValue("type", null);
+    expect(testDoc.data.type).toBeNull();
 
-    form.removeValue("name");
-    expect(testDoc.data.attributes.name).toBe(undefined);
+    form.setValue("name", null);
+    expect(testDoc.data.attributes.name).toBeNull();
 
-    form.removeValue("races[0]");
-    expect(testDoc.data.attributes.races).toEqual(["DeathRace 3000"]);
+    form.setValue("races[0]", null);
+    expect(testDoc.data.attributes.races).toEqual([null, "DeathRace 3000"]);
 
-    form.removeValue("components.tires");
-    expect(testDoc.data.attributes.components.tires).toBe(undefined);
+    form.setValue("components.tires", null);
+    expect(testDoc.data.attributes.components.tires).toBeNull();
   });
 
   it("should remove relationship value", () => {
@@ -214,9 +185,9 @@ describe("removeValue", () => {
       document: testDoc,
     });
 
-    form.removeValue("driver.id");
+    form.setValue("driver.id", null);
 
-    expect(testDoc.data.relationships.driver.data.id).toBe("");
+    expect(testDoc.data.relationships.driver.data.id).toBeNull();
   });
 
   it("should remove included value", () => {
@@ -225,18 +196,14 @@ describe("removeValue", () => {
       document: testDoc,
     });
 
-    form.removeValue("driver.name");
-    expect(testDoc.included[0]?.attributes!["name"]).toBe(undefined);
+    form.setValue("driver.name", null);
+    expect(testDoc.included[0]?.attributes!["name"]).toBeNull();
 
-    form.removeValue("driver.skills.drift");
-    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({});
+    form.setValue("driver.skills.drift", null);
+    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({ drift: null });
 
-    form.removeValue("passengers[0].name");
-    expect(testDoc.included[2]?.attributes!["name"]).toBeUndefined();
-
-    form.removeValue("passengers[0]");
-    expect(testDoc.data.relationships.passengers).toEqual({ data: [] });
-    expect(testDoc.included[2]).toBeUndefined();
+    form.setValue("passengers[0].name", null);
+    expect(testDoc.included[2]?.attributes!["name"]).toBeNull();
   });
 
   it("should set relationship to NULL and remove included", () => {
@@ -245,35 +212,12 @@ describe("removeValue", () => {
       document: testDoc,
     });
 
-    form.removeValue("driver");
+    form.setValue("driver", null);
     expect(testDoc.data.relationships.driver).toEqual({ data: null });
     expect(testDoc.included).toEqual([DuftHaus, Heidi]);
 
-    form.removeValue("passengers");
+    form.setValue("passengers", null);
     expect(testDoc.data.relationships.passengers).toEqual({ data: null });
     expect(testDoc.included).toEqual([DuftHaus]);
-  });
-
-  it("should fire onChange", () => {
-    let changedPath = "";
-    const testDoc = structuredClone(doc);
-    const form = new DocumentForm({
-      document: testDoc,
-      onChange: (_newState: SingleResourceDoc | null, path: string) => {
-        changedPath = path;
-      },
-    });
-
-    form.removeValue("name");
-    expect(changedPath).toBe("name");
-
-    form.removeValue("driver.name");
-    expect(changedPath).toBe("driver.name");
-
-    form.removeValue("driver.skills.drift");
-    expect(changedPath).toBe("driver.skills.drift");
-
-    form.removeValue("driver.id"); // remove after other tests
-    expect(changedPath).toBe("driver.id");
   });
 });

@@ -1,10 +1,10 @@
-import type {
-  Included,
-  LinkObject,
-  ResourceIdentifierObject,
-  ResourceObject,
-  SingleResourceDoc,
-} from "../jsonapi/model";
+import {
+  type Included,
+  type LinkObject,
+  type ResourceObject,
+  type SingleResourceDoc,
+  toResourceIdentifier,
+} from "@jsonapi/model";
 
 export const Herbert = {
   id: "2",
@@ -31,7 +31,15 @@ export const Emily = {
   attributes: { name: "Emily" },
 } satisfies ResourceObject;
 
-const obj = {
+export const DuftHaus = {
+  id: "4711",
+  lid: undefined,
+  type: "building",
+  attributes: { name: "Dufthaus 4711", yearOfConstruction: 1792 },
+} satisfies ResourceObject;
+const included: Included = [Herbert, DuftHaus, Heidi] satisfies Included;
+
+export const TestObject = {
   id: "1",
   lid: undefined,
   type: "car",
@@ -42,16 +50,13 @@ const obj = {
   },
   relationships: {
     driver: {
-      data: { id: "2", lid: undefined, type: "human" },
+      data: toResourceIdentifier(Herbert),
     },
     passengers: {
-      data: [
-        {
-          id: Heidi.id,
-          lid: undefined,
-          type: Heidi.type,
-        } satisfies ResourceIdentifierObject,
-      ],
+      data: [toResourceIdentifier(Heidi)],
+    },
+    "nested.relationship": {
+      data: toResourceIdentifier(DuftHaus),
     },
   },
   links: {
@@ -60,18 +65,17 @@ const obj = {
       href: "https://willy.gone-wild.test",
     } satisfies LinkObject,
   },
+  meta: {
+    direct: "foundDirect",
+    nested: {
+      value: "foundNested",
+    },
+    objects: [{ name: "Object 1" }, { name: "Object 2" }, { name: "Object 3" }],
+  },
 } satisfies ResourceObject;
-
-export const DuftHaus = {
-  id: "4711",
-  lid: undefined,
-  type: "building",
-  attributes: { name: "Dufthaus 4711", yearOfConstruction: 1792 },
-} satisfies ResourceObject;
-const included: Included = [Herbert, DuftHaus, Heidi] satisfies Included;
 
 export const doc = {
-  data: obj,
+  data: TestObject,
   included: included,
   jsonapi: undefined,
   links: undefined,

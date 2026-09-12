@@ -1,4 +1,4 @@
-import type { Document } from "../jsonapi/model/";
+import type { Document } from "@jsonapi/model";
 
 export interface PageMetaData {
   limit: number;
@@ -6,6 +6,7 @@ export interface PageMetaData {
   sort: string;
   total: number;
 }
+
 export function extractPaginationMetaData(doc: Document | null) {
   if (!doc || !doc.meta) {
     return undefined;

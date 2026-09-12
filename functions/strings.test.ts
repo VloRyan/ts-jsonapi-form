@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { capitalize, ellipse, trimPrefix, trimSuffix } from "./";
+import {
+  capitalize,
+  ellipse,
+  trimPrefix,
+  trimSuffix,
+} from "@functions/strings";
 
 describe("capitalize", () => {
   it.each([

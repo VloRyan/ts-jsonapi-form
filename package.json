@@ -35,6 +35,7 @@
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.10",
     "vitest-fetch-mock": "^0.4.5"
   },

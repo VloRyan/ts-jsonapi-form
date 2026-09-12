@@ -3,273 +3,150 @@ import {
   isSameId,
   type ObjectLike,
   type RelationshipObject,
-  type RelationshipsObject,
   type ResourceIdentifierObject,
+  type ResourceLinkage,
   type ResourceObject,
   type SingleResourceDoc,
+  toResourceIdentifier,
   type Value,
-} from "../jsonapi/model";
-import { getValue, removeField, setValue } from "./Value";
+} from "@jsonapi/model";
+import { getValue, setValue } from "@functions/object";
+import { ResourceObjectAccessor } from "@form/ResourceObjectAccessor";
 
-interface RelationshipMatch {
-  ids: ResourceIdentifierObject[];
-  path: string;
-  isArray: boolean;
+interface ResolvedRelationship {
+  remainingPath: string;
+  relationship: RelationshipObject;
+  index?: number;
 }
 
 export class SingleResourceDocumentAccessor {
   private readonly document: SingleResourceDoc;
+  private readonly objectAccessor: ResourceObjectAccessor;
 
   constructor(document: SingleResourceDoc) {
     this.document = document;
+    this.objectAccessor = new ResourceObjectAccessor(document.data);
   }
 
-  public getObjectValue(path: string): unknown {
-    if (!this.document?.data) {
-      return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getObjectValue(path: string): any | undefined {
+    if (this.objectAccessor.isNull()) {
+      return undefined;
     }
-    if (this.isBaseAttribute(path)) {
-      return this.document.data[path];
-    }
-
-    const attrib = this.findAttribute(path);
-    if (attrib) {
-      let attribPath = path.substring(attrib.path.length);
-      if (attribPath.length === 0) {
-        return attrib.value;
-      } else if (attribPath[0] === ".") {
-        attribPath = attribPath.substring(1);
+    const match = this.resolveRelationshipForPath(path);
+    if (match) {
+      if (!match.relationship.data) {
+        return undefined;
       }
-      return getValue(attrib.value, attribPath);
-    }
-
-    const match = this.findRelationshipId(path);
-    if (match && match.ids.length > 0) {
-      if (match.isArray) {
-        const includes: ResourceObject[] = [];
-        for (const relId of match.ids) {
-          const incIndex = this.findIncludeIndex(relId);
-          if (incIndex != -1) {
-            includes.push(this.document.included![incIndex]!);
-          }
-        }
-        return includes;
-      } else {
-        const relId = match.ids[0];
-        let attribPath = path.substring(match.path.length);
-        if (attribPath[0] === ".") {
-          attribPath = attribPath.substring(1);
-        }
-        if (this.isBaseAttribute(attribPath)) {
-          return relId![attribPath];
-        }
-        const incIndex = this.findIncludeIndex(relId!);
-        if (incIndex != -1) {
-          const include = this.document.included![incIndex];
-          if (attribPath.length === 0) {
-            return include;
-          }
-          return getValue(include!.attributes, attribPath);
-        } else {
-          return relId;
-        }
-      }
-    }
-    return undefined;
-  }
-
-  public setObjectValue = (
-    path: string,
-    value: Value | ResourceObject[],
-    onChanged?: (path: string) => void,
-  ) => {
-    if (!this.document?.data) {
-      return;
-    }
-    if (this.isBaseAttribute(path)) {
-      this.document.data[path] = value ? (value as string) : "";
-      if (onChanged) {
-        onChanged(path);
-      }
-      return;
-    }
-
-    if (
-      value &&
-      (isResourceObject(value as ObjectLike) ||
-        (Array.isArray(value) && isResourceObject(value[0] as ObjectLike)))
-    ) {
-      this.setResourceObjectValue(path, value as unknown as ResourceObject);
-      return;
-    }
-
-    let attribPath = "";
-    for (const key in this.document.data.attributes) {
-      if (path.startsWith(key)) {
-        attribPath = path.substring(key.length);
-        if (attribPath.length === 0) {
-          this.document.data.attributes[key] = value as Value;
-          if (onChanged) {
-            onChanged(path);
-          }
-          return;
-        } else if (attribPath[0] === ".") {
-          attribPath = attribPath.substring(1);
-        }
-        setValue(this.document.data.attributes[key], attribPath, value);
-        if (onChanged) {
-          onChanged(path);
-        }
-        return;
-      }
-    }
-
-    for (const key in this.document.data.relationships) {
-      if (path.startsWith(key)) {
-        const relationship = this.document.data.relationships[key];
-        if (!relationship!.data) {
-          continue;
-        }
-        const identifier = relationship!.data as ResourceIdentifierObject;
-        attribPath = path.substring(key.length + 1);
-        if (this.isBaseAttribute(attribPath)) {
-          identifier[attribPath] = value ? (value as string) : "";
-          if (onChanged) {
-            onChanged(path);
-          }
-          return;
-        }
-        if (this.document?.included) {
-          for (const include of this.document!.included) {
-            if (
-              include.type !== identifier.type ||
-              include.id !== identifier.id ||
-              include.lid !== identifier.lid
-            ) {
-              continue;
-            }
-            setValue(include.attributes, attribPath, value);
-            if (onChanged) {
-              onChanged(path);
-            }
-            return;
-          }
-        }
-      }
-    }
-    if (!this.document.data.attributes) {
-      this.document.data.attributes = {};
-    }
-    setValue(this.document.data.attributes, path, value);
-    if (onChanged) {
-      onChanged(path);
-    }
-  };
-
-  public removeObjectValue = (
-    path: string,
-    onChanged?: (path: string) => void,
-  ) => {
-    if (!this.document?.data) {
-      return;
-    }
-
-    let attribPath = "";
-    if (this.isBaseAttribute(path)) {
-      this.document.data[path] = "";
-      if (onChanged) {
-        onChanged(path);
-      }
-      return;
-    } else {
-      for (const key in this.document.data.attributes) {
-        if (path.startsWith(key)) {
-          attribPath = path.substring(key.length);
-          if (attribPath.length === 0) {
-            delete this.document.data.attributes[key];
-            if (onChanged) {
-              onChanged(path);
-            }
-            return;
-          } else if (attribPath[0] === ".") {
-            attribPath = attribPath.substring(1);
-          }
-          removeField(this.document.data.attributes[key], attribPath);
-          if (onChanged) {
-            onChanged(path);
-          }
-          return;
-        }
-      }
-    }
-
-    const rel = this.findRelationship(path);
-    if (rel) {
-      attribPath = path.substring(rel.path.length);
-      if (attribPath[0] === ".") {
-        attribPath = attribPath.substring(1);
-      }
-      if (Array.isArray(rel.object.data)) {
-        if (attribPath.startsWith("[")) {
-          const closingBracket = attribPath.indexOf("]");
-          const elemIdx = +attribPath.substring(1, closingBracket);
-          attribPath = attribPath.substring(closingBracket + 1);
-          if (elemIdx >= rel.object.data.length) {
+      if (Array.isArray(match.relationship.data)) {
+        if (match.index !== undefined) {
+          const relId =
+            match.relationship.data.length > match.index
+              ? match.relationship.data[match.index]!
+              : undefined;
+          if (!relId) {
             return undefined;
           }
-          const identifier = rel.object.data[
-            elemIdx
-          ] as unknown as ResourceIdentifierObject;
-          if (attribPath.length == 0) {
-            rel.object.data.splice(elemIdx, 1);
-            this.removeIncludeIfNotBelongsToOther(identifier);
-          } else {
-            if (this.isBaseAttribute(attribPath)) {
-              identifier[attribPath] = "";
-            } else {
-              const incIndex = this.findIncludeIndex(identifier);
-              if (incIndex != -1) {
-                removeField(
-                  this.document.included![incIndex]!.attributes,
-                  attribPath,
-                );
-              }
-            }
+          const include = this.findInclude(relId);
+          if (match.remainingPath.length == 0) {
+            return include ? include : relId;
           }
-        } else if (attribPath.length == 0) {
-          for (let i = 0; i < rel.object.data.length; i++) {
-            const identifier = rel.object.data[i];
-            rel.object.data.splice(i, 1);
-            this.removeIncludeIfNotBelongsToOther(identifier!);
+          return include
+            ? new ResourceObjectAccessor(include).getValue(match.remainingPath)
+            : relId;
+        } else {
+          if (match.remainingPath.length != 0) {
+            return undefined;
           }
-          this.document.data.relationships![rel.path]!.data = null;
-        }
-        if (onChanged) {
-          onChanged(path);
+          return match.relationship.data.map((relId) => {
+            const include = this.findInclude(relId);
+            return include ? include : relId;
+          });
         }
       } else {
-        const identifier = rel.object
-          .data as unknown as ResourceIdentifierObject;
-        if (this.isBaseAttribute(attribPath)) {
-          identifier[attribPath] = "";
+        if (match.index) {
+          return undefined;
         }
-        if (attribPath.length === 0) {
-          this.removeIncludeIfNotBelongsToOther(identifier);
-          this.document.data.relationships![rel.path]!.data = null;
-        } else {
-          const incIndex = this.findIncludeIndex(identifier);
-          if (incIndex != -1) {
-            removeField(
-              this.document.included![incIndex]!.attributes,
-              attribPath,
-            );
-          }
+        const relId = match.relationship.data;
+        const include = this.findInclude(relId);
+        if (match.remainingPath.length == 0) {
+          return include ? include : relId;
         }
-        if (onChanged) {
-          onChanged(path);
-        }
+        return include
+          ? new ResourceObjectAccessor(include).getValue(match.remainingPath)
+          : relId;
       }
     }
+    return this.objectAccessor.getValue(path);
+  }
+
+  public setObjectValue = (path: string, value: Value | ResourceObject[]) => {
+    if (this.objectAccessor.isNull()) {
+      return undefined;
+    }
+    if (
+      isResourceObject(value as unknown as ObjectLike) ||
+      (Array.isArray(value) &&
+        isResourceObject(value[0] as unknown as ObjectLike))
+    ) {
+      const linkage: ResourceLinkage = Array.isArray(value)
+        ? value.map((v) => toResourceIdentifier(v as ResourceObject))
+        : toResourceIdentifier(value as unknown as ResourceObject);
+      const match = this.resolveRelationshipForPath(path);
+      if (match) {
+        match.relationship.data = linkage;
+      } else {
+        this.objectAccessor.setRelationship(path, { data: linkage });
+      }
+      if (Array.isArray(value)) {
+        value.forEach((v) => this.addOrUpdateInclude(v as ResourceObject));
+      } else {
+        this.addOrUpdateInclude(value as unknown as ResourceObject);
+      }
+      return;
+    }
+
+    const match = this.resolveRelationshipForPath(path);
+    if (match) {
+      if (!match.relationship.data) {
+        return;
+      }
+      if (match.remainingPath.length == 0 && value === null) {
+        this.getResourceIdentifier(match.relationship).forEach((relId) =>
+          this.removeIncludeIfNotBelongsToOther(relId),
+        );
+        match.relationship.data = null;
+        return;
+      }
+
+      const relId =
+        match.index !== undefined
+          ? Array.isArray(match.relationship.data) &&
+            match.relationship.data.length > match.index
+            ? match.relationship.data[match.index]!
+            : undefined
+          : !Array.isArray(match.relationship.data)
+            ? (match.relationship.data as ResourceIdentifierObject)
+            : undefined;
+      if (!relId) {
+        return;
+      }
+
+      if (this.isBaseAttribute(match.remainingPath)) {
+        setValue(relId, match.remainingPath, value);
+      } else {
+        const include = this.findInclude(relId);
+        if (!include) {
+          return;
+        }
+        new ResourceObjectAccessor(include).setValue(
+          match.remainingPath,
+          value,
+        );
+      }
+      return;
+    }
+    this.objectAccessor.setValue(path, value);
   };
 
   public getLink(path: string): unknown {
@@ -288,18 +165,66 @@ export class SingleResourceDocumentAccessor {
     return id != undefined && id !== "";
   }
 
-  private findAttribute(
+  private resolveRelationshipForPath(
     path: string,
-  ): { value: Value; path: string } | undefined {
-    if (!this.document?.data?.attributes) {
-      return undefined;
+  ): ResolvedRelationship | null {
+    const matches = this.objectAccessor.filterRelationships((relPath) =>
+      path.startsWith(relPath),
+    );
+    if (matches.length != 1 || !matches[0]!.relationship) {
+      return null;
     }
-    for (const key in this.document.data.attributes) {
-      if (path.startsWith(key)) {
-        return { value: this.document.data.attributes[key]!, path: key };
+    let remainingPath = path.substring(matches[0]!.path.length);
+    if (remainingPath.charAt(0) == "[") {
+      const identifierClose = remainingPath.indexOf("]");
+      if (identifierClose == -1) {
+        return null;
+      }
+      const identifier = remainingPath.substring(1, identifierClose);
+      const index = Number.parseInt(identifier, 10);
+      if (Number.isNaN(index)) {
+        return null;
+      }
+      remainingPath = remainingPath.substring(identifierClose + 1);
+      if (remainingPath.charAt(0) == ".") {
+        remainingPath = remainingPath.substring(1);
+      }
+      return {
+        remainingPath,
+        relationship: matches[0]!.relationship,
+        index,
+      };
+    }
+    if (remainingPath.charAt(0) == ".") {
+      remainingPath = remainingPath.substring(1);
+    }
+    return {
+      remainingPath,
+      relationship: matches[0]!.relationship,
+    };
+  }
+
+  private addOrUpdateInclude(value: ResourceObject) {
+    let found = false;
+    for (let i = 0; i < (this.document.included?.length ?? 0); i++) {
+      if (isSameId(this.document.included![i]!, value)) {
+        found = true;
+        this.document.included![i] = value;
+        break;
       }
     }
-    return undefined;
+    if (!found) {
+      if (!this.document.included) {
+        this.document.included = [];
+      }
+      this.document.included.push(value);
+    }
+  }
+
+  private getResourceIdentifier(relationship: RelationshipObject) {
+    return Array.isArray(relationship.data)
+      ? (relationship.data as ResourceIdentifierObject[])
+      : [relationship.data as ResourceIdentifierObject];
   }
 
   private removeIncludeIfNotBelongsToOther(id: ResourceIdentifierObject) {
@@ -338,157 +263,16 @@ export class SingleResourceDocumentAccessor {
     }
   }
 
-  private setResourceObjectValue = (
-    path: string,
-    value: ResourceObject | ResourceObject[],
-  ) => {
-    if (!this.document?.data) {
-      return;
+  private findInclude(id: ResourceIdentifierObject) {
+    if (!this.document?.included || !id) {
+      return null;
     }
-    const rel = this.findRelationship(path);
-    if (Array.isArray(value)) {
-      const ids = value.map(
-        (item) =>
-          ({
-            id: item.id,
-            type: item.type,
-            lid: item.lid,
-          }) satisfies ResourceIdentifierObject,
-      );
-      if (rel) {
-        rel.object.data = ids;
-      } else {
-        if (!this.document.data.relationships) {
-          this.document.data.relationships = {} satisfies RelationshipsObject;
-        }
-        this.document.data.relationships[path] = {
-          data: ids,
-        };
-      }
-      if (!this.document?.included) {
-        this.document.included = value;
-      } else {
-        for (const obj of value) {
-          const includeIndex = this.findIncludeIndex(obj);
-          if (includeIndex != -1) {
-            this.document.included[includeIndex] = obj;
-          } else {
-            this.document!.included.push(obj);
-          }
-        }
-      }
-    } else {
-      if (rel && rel.object.data) {
-        const identifier = rel.object.data as ResourceIdentifierObject;
-        identifier.id = value.id;
-        identifier.type = value.type;
-        identifier.lid = value.lid;
-      } else {
-        if (!this.document.data.relationships) {
-          this.document.data.relationships = {} satisfies RelationshipsObject;
-        }
-        this.document.data.relationships[path] = {
-          data: {
-            id: value.id,
-            type: value.type,
-            lid: value.lid,
-          },
-        } satisfies RelationshipObject;
-      }
-      if (!this.document?.included) {
-        this.document.included = [];
-        this.document.included.push(value);
-      } else {
-        const includeIndex = this.findIncludeIndex(value);
-        if (includeIndex != -1) {
-          this.document!.included[includeIndex] = value;
-        } else {
-          this.document!.included.push(value);
-        }
+    for (const include of this.document.included) {
+      if (isSameId(include, id)) {
+        return include;
       }
     }
-  };
-
-  private findRelationship(
-    path: string,
-  ): { object: RelationshipObject; path: string } | undefined {
-    if (!this.document?.data?.relationships) {
-      return undefined;
-    }
-    for (const key in this.document.data.relationships) {
-      const relationship = this.document.data.relationships[key];
-      if (path.startsWith(key)) {
-        return {
-          object: relationship as unknown as RelationshipObject,
-          path: key,
-        };
-      }
-    }
-    return undefined;
-  }
-
-  private findRelationshipId(path: string): RelationshipMatch | undefined {
-    if (!this.document?.data?.relationships) {
-      return undefined;
-    }
-    for (const key in this.document.data.relationships) {
-      const relationship = this.document.data.relationships[key];
-      if (path.startsWith(key)) {
-        let subPath = path.substring(key.length);
-        if (subPath[0] === ".") {
-          subPath = subPath.substring(1);
-        }
-        if (Array.isArray(relationship!.data)) {
-          if (subPath.startsWith("[")) {
-            const closingBracket = subPath.indexOf("]");
-            const elemIdx = +subPath.substring(1, closingBracket);
-            subPath = subPath.substring(closingBracket + 1);
-            if (elemIdx >= relationship!.data.length) {
-              return undefined;
-            }
-            return {
-              ids: [relationship!.data[elemIdx]!],
-              path: key + `[${elemIdx}]`,
-              isArray: false,
-            };
-          } else if (subPath.length == 0) {
-            const result = {
-              ids: [] as ResourceIdentifierObject[],
-              path: key,
-              isArray: true,
-            } satisfies RelationshipMatch;
-            for (const id of relationship!.data) {
-              result.ids.push(id);
-            }
-            return result;
-          } else {
-            return undefined;
-          }
-        } else {
-          return {
-            ids: [relationship!.data as unknown as ResourceIdentifierObject],
-            path: key,
-            isArray: false,
-          };
-        }
-      }
-    }
-    return undefined;
-  }
-
-  private findIncludeIndex(id: ResourceIdentifierObject) {
-    if (!this.document?.included) {
-      return -1;
-    }
-    if (!id) {
-      return -1;
-    }
-    for (let i = 0; i < this.document.included.length; i++) {
-      if (isSameId(this.document.included[i]!, id)) {
-        return i;
-      }
-    }
-    return -1;
+    return null;
   }
 
   private isBaseAttribute(name: string) {

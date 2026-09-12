@@ -1,9 +1,9 @@
-import { trimPrefix, trimSuffix } from "./";
+import { trimPrefix, trimSuffix } from "@functions/strings";
 import {
-  type ObjectLike,
   isResourceObject,
+  type ObjectLike,
   type ResourceIdentifierObject,
-} from "../jsonapi/model";
+} from "@jsonapi/model";
 
 const protocolRegEx = /\w+:\/\//g;
 export function joinPath(base: string, ...elements: string[]) {

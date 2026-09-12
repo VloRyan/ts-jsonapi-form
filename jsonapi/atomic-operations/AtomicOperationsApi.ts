@@ -1,10 +1,10 @@
-import type { AtomicOperationsDocument } from "./model/Document";
+import type { AtomicOperationsDocument } from "@jsonapi/atomic-operations/model";
 
 import {
   InvalidServerResponseError,
   MEDIA_TYPE as JSON_API_MEDIA_TYPE,
-} from "../";
-import { ApiError } from "../model/";
+} from "@jsonapi/JsonApi";
+import { ApiError } from "@jsonapi/model";
 import { StatusCodes } from "http-status-codes";
 
 const MEDIA_TYPE =

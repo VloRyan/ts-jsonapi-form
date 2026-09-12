@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { SingleResourceDocumentAccessor } from "./SingleResourceDocumentAccessor";
-import type { RelationshipObject } from "../jsonapi/model";
-import { doc, DuftHaus, Emily, Heidi, Herbert } from "./test_data";
+
+import { type RelationshipObject, toResourceIdentifier } from "@jsonapi/model";
+import { doc, DuftHaus, Emily, Heidi, Herbert } from "@form/test_data";
+import { SingleResourceDocumentAccessor } from "@form/SingleResourceDocumentAccessor";
 
 describe("getObjectValue", () => {
   it("should get attrib value", () => {
@@ -113,7 +114,7 @@ describe("setObjectValue", () => {
 
     // @ts-expect-error too dynamic for the ide
     expect(testDoc.data.relationships!["passenger"]).toEqual({
-      data: { id: Heidi.id, lid: undefined, type: Heidi.type },
+      data: toResourceIdentifier(Heidi),
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
   });
@@ -125,10 +126,7 @@ describe("setObjectValue", () => {
     document.setObjectValue("passengers", [Heidi, Emily]);
 
     expect(testDoc.data.relationships!["passengers"]).toEqual({
-      data: [
-        { id: Heidi.id, lid: undefined, type: Heidi.type },
-        { id: Emily.id, lid: undefined, type: Emily.type },
-      ],
+      data: [toResourceIdentifier(Heidi), toResourceIdentifier(Emily)],
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);
     expect(testDoc.included[3]).toEqual(Emily);
@@ -141,112 +139,63 @@ describe("setObjectValue", () => {
     document.setObjectValue("driver", Emily);
 
     expect(testDoc.data.relationships!["driver"]).toEqual({
-      data: { id: Emily.id, lid: undefined, type: Emily.type },
+      data: toResourceIdentifier(Emily),
     } satisfies RelationshipObject);
     expect(testDoc.included[0]).toEqual(Herbert);
     expect(testDoc.included[3]).toEqual(Emily);
   });
 
-  it("should fire onChange", () => {
-    let changedPath = "";
-    const testDoc = structuredClone(doc);
-    testDoc.data.relationships.driver.data.id = "3"; // change to rechange
-    const document = new SingleResourceDocumentAccessor(testDoc);
-    const onChange = (path: string) => {
-      changedPath = path;
-    };
-
-    document.setObjectValue("name", "Herbie", onChange);
-    expect(changedPath).toBe("name");
-
-    document.setObjectValue("driver.id", "2", onChange); // rechange to original
-    expect(changedPath).toBe("driver.id");
-
-    document.setObjectValue("driver.name", "Gunther", onChange);
-    expect(changedPath).toBe("driver.name");
-
-    document.setObjectValue("driver.skills.drift", "pro", onChange);
-    expect(changedPath).toBe("driver.skills.drift");
-  });
-});
-
-describe("removeObjectValue", () => {
-  it("should remove attrib value", () => {
+  it("should set attrib value to null", () => {
     const testDoc = structuredClone(doc);
     const document = new SingleResourceDocumentAccessor(testDoc);
 
-    document.removeObjectValue("type");
-    expect(testDoc.data.type).toBe("");
+    document.setObjectValue("type", null);
+    expect(testDoc.data.type).toBeNull();
 
-    document.removeObjectValue("name");
-    expect(testDoc.data.attributes.name).toBe(undefined);
+    document.setObjectValue("name", null);
+    expect(testDoc.data.attributes.name).toBeNull();
 
-    document.removeObjectValue("races[0]");
-    expect(testDoc.data.attributes.races).toEqual(["DeathRace 3000"]);
+    document.setObjectValue("races[0]", null);
+    expect(testDoc.data.attributes.races).toEqual([null, "DeathRace 3000"]);
 
-    document.removeObjectValue("components.tires");
-    expect(testDoc.data.attributes.components.tires).toBe(undefined);
+    document.setObjectValue("components.tires", null);
+    expect(testDoc.data.attributes.components.tires).toBeNull();
   });
 
-  it("should remove relationship value", () => {
+  it("should set relationship value to null", () => {
     const testDoc = structuredClone(doc);
     const document = new SingleResourceDocumentAccessor(testDoc);
 
-    document.removeObjectValue("driver.id");
+    document.setObjectValue("driver.id", null);
 
-    expect(testDoc.data.relationships.driver.data.id).toBe("");
+    expect(testDoc.data.relationships.driver.data.id).toBeNull();
   });
 
-  it("should remove included value", () => {
+  it("should set included value to null", () => {
     const testDoc = structuredClone(doc);
     const document = new SingleResourceDocumentAccessor(testDoc);
 
-    document.removeObjectValue("driver.name");
-    expect(testDoc.included[0]?.attributes!["name"]).toBe(undefined);
+    document.setObjectValue("driver.name", null);
+    expect(testDoc.included[0]?.attributes!["name"]).toBeNull();
 
-    document.removeObjectValue("driver.skills.drift");
-    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({});
+    document.setObjectValue("driver.skills.drift", null);
+    expect(testDoc.included[0]?.attributes!["skills"]).toEqual({ drift: null });
 
-    document.removeObjectValue("passengers[0].name");
-    expect(testDoc.included[2]?.attributes!["name"]).toBeUndefined();
-
-    document.removeObjectValue("passengers[0]");
-    expect(testDoc.data.relationships.passengers).toEqual({ data: [] });
-    expect(testDoc.included[2]).toBeUndefined();
+    document.setObjectValue("passengers[0].name", null);
+    expect(testDoc.included[2]?.attributes!["name"]).toBeNull();
   });
 
-  it("should set relationship to NULL and remove included", () => {
+  it("should set relationship to null and remove include", () => {
     const testDoc = structuredClone(doc);
     const document = new SingleResourceDocumentAccessor(testDoc);
 
-    document.removeObjectValue("driver");
+    document.setObjectValue("driver", null);
     expect(testDoc.data.relationships.driver).toEqual({ data: null });
     expect(testDoc.included).toEqual([DuftHaus, Heidi]);
 
-    document.removeObjectValue("passengers");
+    document.setObjectValue("passengers", null);
     expect(testDoc.data.relationships.passengers).toEqual({ data: null });
     expect(testDoc.included).toEqual([DuftHaus]);
-  });
-
-  it("should fire onChange", () => {
-    let changedPath = "";
-    const testDoc = structuredClone(doc);
-    const document = new SingleResourceDocumentAccessor(testDoc);
-    const onChange = (path: string) => {
-      changedPath = path;
-    };
-
-    document.removeObjectValue("name", onChange);
-    expect(changedPath).toBe("name");
-
-    document.removeObjectValue("driver.name", onChange);
-    expect(changedPath).toBe("driver.name");
-
-    document.removeObjectValue("driver.skills.drift", onChange);
-    expect(changedPath).toBe("driver.skills.drift");
-
-    document.removeObjectValue("driver.id", onChange); // remove after other tests
-    expect(changedPath).toBe("driver.id");
   });
 });
 

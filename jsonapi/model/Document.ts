@@ -1,7 +1,11 @@
-import type { ImplementationInfo, MetaObject } from "./Types";
-import type { Links, PaginationLinks } from "./Links";
-import type { ErrorObject } from "./Error";
-import type { ResourceObject } from "./Objects";
+import type {
+  ErrorObject,
+  ImplementationInfo,
+  Links,
+  MetaObject,
+  PaginationLinks,
+  ResourceObject,
+} from "@jsonapi/model";
 
 export interface Document<T extends PrimaryData = PrimaryData> {
   jsonapi: ImplementationInfo | undefined;
@@ -12,8 +16,9 @@ export interface Document<T extends PrimaryData = PrimaryData> {
   included: Included | undefined;
 }
 
-export interface DocWithData<T extends PrimaryData = PrimaryData>
-  extends Document {
+export interface DocWithData<
+  T extends PrimaryData = PrimaryData,
+> extends Document {
   data: T;
   included: Included | undefined;
 }

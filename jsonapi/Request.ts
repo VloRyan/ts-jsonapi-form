@@ -1,5 +1,5 @@
-import type { ObjectLike, Value } from "./model/";
-import type { FetchOpts, Page } from "./JsonApi";
+import type { ObjectLike, Value } from "@jsonapi/model";
+import type { FetchOpts, Page } from "@jsonapi/JsonApi";
 
 export const extractFilter = (search: string) => {
   if (!search) {

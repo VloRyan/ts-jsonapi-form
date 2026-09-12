@@ -1,3 +1,4 @@
-export * from "./ObjectForm";
 export * from "./DocumentForm";
-export * from "./Value";
+export * from "./ObjectForm";
+export * from "./ResourceObjectAccessor";
+export * from "./SingleResourceDocumentAccessor";

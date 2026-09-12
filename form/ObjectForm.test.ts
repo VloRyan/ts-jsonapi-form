@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SingleObjectForm } from "./ObjectForm";
-import type { ResourceObject } from "../jsonapi/model";
+import { SingleObjectForm } from "@form/ObjectForm";
 
 interface TestObject {
   name?: string;
@@ -89,78 +88,6 @@ describe("setValue", () => {
 
     expect(testObject.races).toEqual(["SpeedRace", "UnicornRace"]);
   });
-
-  it("should fire onChange", () => {
-    const testObject = structuredClone(obj);
-    let changedPath = "";
-    const form = new SingleObjectForm({
-      object: testObject,
-      onChange: (_newState: ResourceObject | null, path: string) => {
-        changedPath = path;
-      },
-    });
-
-    form.setValue("name", "Herbie");
-    expect(changedPath).toBe("name");
-
-    form.setValue("driver.id", "2");
-    expect(changedPath).toBe("driver.id");
-
-    form.setValue("driver.name", "Gunther");
-    expect(changedPath).toBe("driver.name");
-
-    form.setValue("driver.skills.drift", "pro");
-    expect(changedPath).toBe("driver.skills.drift");
-  });
-});
-
-describe("removeValue", () => {
-  it("should remove direct value", () => {
-    const testObject = structuredClone(obj);
-    const form = new SingleObjectForm({
-      object: testObject,
-    });
-
-    form.removeValue("type");
-    expect(testObject.type).toBe(undefined);
-
-    form.removeValue("name");
-    expect(testObject.name).toBe(undefined);
-  });
-
-  it("should remove nested value", () => {
-    const testObject = structuredClone(obj);
-    const form = new SingleObjectForm({ object: testObject });
-
-    form.removeValue("components.tires");
-    expect(testObject.components.tires).toBe(undefined);
-
-    form.removeValue("driver.skills.drift");
-    expect(testObject.driver.skills).toEqual({});
-  });
-
-  it("should fire onChange", () => {
-    const testObject = structuredClone(obj);
-    let changedPath = "";
-    const form = new SingleObjectForm({
-      object: testObject,
-      onChange: (_newState: ResourceObject | null, path: string) => {
-        changedPath = path;
-      },
-    });
-
-    form.removeValue("name");
-    expect(changedPath).toBe("name");
-
-    form.removeValue("driver.name");
-    expect(changedPath).toBe("driver.name");
-
-    form.removeValue("driver.skills.drift");
-    expect(changedPath).toBe("driver.skills.drift");
-
-    form.removeValue("driver.id"); // remove after other tests
-    expect(changedPath).toBe("driver.id");
-  });
 });
 
 const dummyObject = {
@@ -235,7 +162,7 @@ describe("handleChange", () => {
       value: "",
     } as unknown as HTMLInputElement);
 
-    expect(testObject.date).toBeUndefined();
+    expect(testObject.date).toBeNull();
   });
 
   it("GIVEN datetime-local value THEN set iso date string", () => {

@@ -1,11 +1,11 @@
 import {
+  ApiError,
   type Document as APIDocument,
   type Included,
-  ApiError,
-  type ResourceIdentifierObject,
   isSameId,
   type ObjectLike,
-} from "./model";
+  type ResourceIdentifierObject,
+} from "@jsonapi/model";
 import { StatusCodes } from "http-status-codes";
 
 export const MEDIA_TYPE = "application/vnd.api+json";

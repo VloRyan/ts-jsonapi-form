@@ -55,6 +55,10 @@ export class DocumentForm extends SingleObjectForm<SingleResourceDoc> {
     this.document.setObjectValue(path, value);
   };
 
+  public getDocument(): SingleResourceDocumentAccessor | null {
+    return this.document;
+  }
+
   override handleSubmit = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();

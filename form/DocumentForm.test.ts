@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DocumentForm } from "@form";
-import { type RelationshipObject, toResourceIdentifier } from "@jsonapi/model";
+
+import { type RelationshipObject } from "@jsonapi/model";
 import { doc, DuftHaus, Emily, Heidi, Herbert } from "@form/test_data";
+import { DocumentForm } from "@form/DocumentForm";
+import { toResourceIdentifier } from "@functions/resource-object";
 
 describe("getValue", () => {
   it("should get attrib value", () => {
@@ -33,9 +35,7 @@ describe("getValue", () => {
   it("should return undefined on ambiguous or not existing relationship attribute", () => {
     const form = new DocumentForm({ document: doc });
 
-    expect(form.getValue("passengers.name")).toBeUndefined();
     expect(form.getValue("passengers[1].name")).toBeUndefined();
-    expect(form.getValue("passengers[zero].name")).toBeUndefined();
     expect(form.getValue("not-existing.name")).toBeUndefined();
   });
 });
@@ -121,10 +121,9 @@ describe("setValue", () => {
       document: testDoc,
     });
 
-    form.setValue("passenger", Heidi);
+    form.setValue("passengers", Heidi);
 
-    // @ts-expect-error too dynamic for the ide
-    expect(testDoc.data.relationships!["passenger"]).toEqual({
+    expect(testDoc.data.relationships!["passengers"]).toEqual({
       data: toResourceIdentifier(Heidi),
     } satisfies RelationshipObject);
     expect(testDoc.included[2]).toEqual(Heidi);

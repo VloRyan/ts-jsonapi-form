@@ -1,222 +1,220 @@
-import { getValue, setValue } from "@functions/object";
 import {
-  isResourceObject,
-  type ObjectLike,
+  getValue,
+  PathElement,
+  setValue,
+  splitPath,
+  traversePath,
+} from "@functions/object";
+import {
+  type AnyObject,
+  type AttributeValue,
   type RelationshipObject,
-  type ResourceIdentifierObject,
+  type ResourceLinkage,
   type ResourceObject,
-  toResourceIdentifier,
-  type Value,
 } from "@jsonapi/model";
+import {
+  isBaseMember,
+  isResourceObject,
+  toResourceIdentifier,
+} from "@functions/resource-object";
+import { RelationshipObjectAccessor } from "@form/RelationshipObjectAccessor";
+import { DocumentObjectAccessor } from "@form/DocumentObjectAccessor";
 
-export class ResourceObjectAccessor {
-  private readonly object: ResourceObject | null;
+export type FieldType = "attribute" | "relationship";
 
-  constructor(object: ResourceObject | null) {
-    this.object = object;
-  }
-
-  public isNull() {
-    return this.object == null;
-  }
-
-  /**
-   * Resolve the path to get the value from the attributes or relationships.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getValue(path: string): any | undefined {
-    const attribValue = this.getAttributeValue(path);
-    if (attribValue !== undefined) {
-      return attribValue;
-    }
-    const parts = path.split(".");
-    const lastPart = parts[parts.length - 1]!;
-    if (this.isBaseAttribute(lastPart) && parts.length > 1) {
-      const relId = this.getRelationshipResourceIdentifier(
-        parts.toSpliced(parts.length - 1, 1).join("."),
-      );
-      if (!relId) {
-        return undefined;
-      }
-      return getValue(relId, lastPart);
-    }
-    const relationship = this.getRelationship(path);
-    return relationship ? relationship : undefined;
-  }
-
-  public setValue = (path: string, value: Value | ResourceObject[]) => {
-    if (!this.object) {
-      return;
-    }
-    if (
-      value &&
-      (isResourceObject(value as ObjectLike) ||
-        (Array.isArray(value) && isResourceObject(value[0] as ObjectLike)))
-    ) {
-      const relation = {
-        data: Array.isArray(value)
-          ? (value as ResourceObject[]).map((r) => toResourceIdentifier(r))
-          : toResourceIdentifier(value as unknown as ResourceObject),
-      } satisfies RelationshipObject;
-      this.setRelationship(path, relation);
-      return;
-    }
-
-    const parts = path.split(".");
-    const lastPart = parts[parts.length - 1]!;
-    if (this.isBaseAttribute(lastPart)) {
-      const relId = this.getRelationshipResourceIdentifier(
-        parts.toSpliced(parts.length - 1, 1).join("."),
-      );
-      if (relId) {
-        setValue(relId, lastPart, value);
-        return;
-      }
-    }
-    const relationship = this.getRelationship(path);
-    if (relationship) {
-      relationship.data = null;
-    }
-
-    this.setAttributeValue(path, value);
-  };
-
-  public getLink(path: string): unknown {
-    if (!this.object?.links) {
-      return;
-    }
-    return getValue(this.object.links, path);
-  }
-
+export class ResourceObjectAccessor extends DocumentObjectAccessor<ResourceObject> {
   public getId() {
     return this.object?.id;
   }
 
-  public hasId() {
-    const id = this.getId();
-    return id != undefined && id !== "";
+  public getLid() {
+    return this.object?.lid;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public getMetaValue(path: string): any {
+  public getType() {
+    return this.object?.type;
+  }
+
+  public getAttribute(path: string | PathElement[]): AttributeValue {
     if (!this.object) {
-      return null;
+      return undefined;
     }
-    return getValue(this.object.meta, path);
+    const pathElements = typeof path == "string" ? splitPath(path) : path;
+
+    if (pathElements.length == 1 && isBaseMember(pathElements[0]!.name)) {
+      return getValue(this.object, pathElements[0]!.name);
+    }
+
+    const traversedPath = traversePath(this.object.attributes, pathElements);
+    if (traversedPath.length - 1 == pathElements.length) {
+      return traversedPath[traversedPath.length - 1]!.value;
+    }
+    return undefined;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public setMetaValue(path: string, value: any) {
+  public setAttribute = (
+    path: string | PathElement[],
+    value: Exclude<AttributeValue, undefined>,
+  ) => {
     if (!this.object) {
       return;
     }
-    setValue(this.object.meta, path, value);
-  }
+    const pathElements = typeof path == "string" ? splitPath(path) : path;
+    setValue(
+      pathElements.length == 1 && isBaseMember(pathElements[0]!.name)
+        ? this.object
+        : this.object.attributes,
+      pathElements,
+      value,
+    );
+  };
 
-  public getRelationship(path: string): RelationshipObject | null {
+  public getRelationship(name: string): RelationshipObjectAccessor | undefined {
     if (!this.object?.relationships) {
-      return null;
+      return undefined;
     }
-    if (!Object.keys(this.object.relationships).includes(path)) {
-      return null;
-    }
-    return this.object.relationships[path]!;
-  }
-
-  public getRelationshipResourceIdentifier(
-    path: string,
-  ): ResourceIdentifierObject | null {
-    if (!this.object?.relationships) {
-      return null;
-    }
-    let arrIndex = -1;
-    const arrStart = path.lastIndexOf("[");
-    if (arrStart > -1) {
-      arrIndex = +path.substring(arrStart + 1, path.lastIndexOf("]"));
-      path = path.substring(0, arrStart);
-    }
-    const relationship = this.getRelationship(path);
+    const relationship = this.object.relationships[name];
     if (!relationship) {
-      return null;
+      return undefined;
     }
-    if (Array.isArray(relationship.data)) {
-      const relationships = relationship.data as ResourceIdentifierObject[];
-      if (arrIndex == -1) {
-        return null;
-      }
-      if (relationships.length < arrIndex) {
-        return null;
-      }
-      return relationships[arrIndex]!;
-    }
-
-    return relationship.data;
+    return new RelationshipObjectAccessor(relationship);
   }
 
-  public setRelationship(
-    path: string,
-    relationship: RelationshipObject,
-    onChanged?: (path: string) => void,
-  ) {
+  public setRelationship(name: string, relationship: RelationshipObject) {
     if (!this.object) {
+      return;
+    }
+    const nameElements = splitPath(name);
+    if (nameElements.length > 1 || nameElements[0]!.index !== undefined) {
       return;
     }
     if (!this.object.relationships) {
       this.object.relationships = {};
     }
-    this.object.relationships[path] = relationship;
-    if (onChanged) {
-      onChanged(path);
-    }
+    this.object.relationships[name] = relationship;
   }
 
-  public filterRelationships(
-    filter: (path: string, relationship: RelationshipObject) => boolean,
-  ): { relationship: RelationshipObject; path: string }[] {
-    const result: { path: string; relationship: RelationshipObject }[] = [];
-    if (!this.object?.relationships) {
-      return [];
+  public getField(
+    path: string | PathElement[],
+    source: FieldType | undefined = undefined,
+  ): AttributeValue | ResourceLinkage {
+    if (!this.object) {
+      return;
     }
-
-    for (const path of Object.keys(this.object.relationships)) {
-      const relationship = this.object.relationships[path]!;
-      if (filter(path, relationship)) {
-        result.push({ path: path, relationship: relationship });
+    const pathElements = typeof path == "string" ? splitPath(path) : path;
+    if (
+      this.object.relationships &&
+      pathElements.length < 3 &&
+      ["relationship", undefined].includes(source)
+    ) {
+      const relationship = this.object.relationships[pathElements[0]!.name];
+      if (relationship) {
+        const linkage =
+          pathElements[0]!.index != undefined
+            ? Array.isArray(relationship.data)
+              ? relationship.data[pathElements[0]!.index]
+              : undefined
+            : relationship.data;
+        if (!linkage) {
+          return undefined;
+        }
+        return pathElements.length == 1
+          ? linkage
+          : getValue(linkage, pathElements.toSpliced(0, 1));
       }
     }
-    return result;
+    if (["attribute", undefined].includes(source)) {
+      return this.getAttribute(pathElements);
+    }
+    return undefined;
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private getAttributeValue(path: string): any | undefined {
+  public setField(
+    path: string | PathElement[],
+    value:
+      Exclude<AttributeValue, undefined> | ResourceObject | ResourceObject[],
+    destination: FieldType | undefined = undefined,
+  ) {
     if (!this.object) {
-      return null;
+      return;
     }
-    if (this.isBaseAttribute(path)) {
-      return getValue(this.object, path);
-    }
-    return getValue(this.object.attributes, path);
-  }
-
-  private setAttributeValue = (
-    path: string,
-    value: Value | ResourceObject[],
-  ): boolean => {
-    if (!this.object) {
-      return false;
-    }
-    if (this.isBaseAttribute(path)) {
-      setValue(this.object, path, value);
-    } else {
-      if (!this.object.attributes) {
-        this.object.attributes = {};
+    const pathElements = typeof path == "string" ? splitPath(path) : path;
+    if (["relationship", undefined].includes(destination)) {
+      const handled = this.setRelationshipField(pathElements, value);
+      if (handled) {
+        return;
       }
-      setValue(this.object.attributes, path, value);
     }
-    return true;
-  };
+    if (["attribute", undefined].includes(destination)) {
+      this.setAttribute(
+        pathElements,
+        value as Exclude<AttributeValue, undefined>,
+      );
+    }
+  }
 
-  private isBaseAttribute(name: string) {
-    return name == "id" || name == "type" || name == "lid";
+  private setRelationshipField(
+    pathElements: PathElement[],
+    value:
+      Exclude<AttributeValue, undefined> | ResourceObject | ResourceObject[],
+  ): boolean {
+    const existingRelationship =
+      this.object!.relationships && pathElements[0]!.index === undefined
+        ? this.object!.relationships[pathElements[0]!.name]
+        : undefined;
+    if (existingRelationship) {
+      if (pathElements.length == 1) {
+        if (value !== null) {
+          if (
+            isResourceObject(value as unknown as AnyObject) ||
+            (Array.isArray(value) &&
+              isResourceObject(value[0] as unknown as AnyObject))
+          ) {
+            existingRelationship.data = Array.isArray(value)
+              ? value.map((v) =>
+                  toResourceIdentifier(v as unknown as ResourceObject),
+                )
+              : toResourceIdentifier(value as unknown as ResourceObject);
+          }
+        } else {
+          existingRelationship.data = null;
+        }
+        // reset
+        delete existingRelationship.links;
+        delete existingRelationship.meta;
+      } else if (
+        pathElements.length == 2 &&
+        isBaseMember(pathElements[1]!.name)
+      ) {
+        const linkage =
+          pathElements[1]!.index != undefined
+            ? Array.isArray(existingRelationship.data)
+              ? existingRelationship.data[pathElements[1]!.index]
+              : undefined
+            : existingRelationship.data;
+        if (linkage) {
+          setValue(linkage, pathElements[1]!.name, value);
+        }
+      }
+      return true;
+    }
+    if (
+      isResourceObject(value as unknown as AnyObject) ||
+      (Array.isArray(value) &&
+        isResourceObject(value[0] as unknown as AnyObject))
+    ) {
+      if (pathElements.length == 1 && pathElements[0]!.index === undefined) {
+        if (!this.object!.relationships) {
+          this.object!.relationships = {};
+        }
+        const linkage = Array.isArray(value)
+          ? value.map((v) =>
+              toResourceIdentifier(v as unknown as ResourceObject),
+            )
+          : toResourceIdentifier(value as unknown as ResourceObject);
+        this.object!.relationships[pathElements[0]!.name] = { data: linkage };
+      }
+      return true;
+    }
+    return false;
   }
 }

@@ -1,148 +1,204 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getValue = (obj: any, path: string): any | undefined => {
-  const parts = splitPath(path);
-  const traversedPath = traversePath(obj, parts);
+import type { AnyObject } from "@jsonapi/model";
+import { isAlphaNumeric } from "@functions/strings";
 
-  if (traversedPath.length != parts.length) {
+export const getValue = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: any,
+  path: string | PathElement[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any | undefined => {
+  const pathElements = typeof path == "string" ? splitPath(path) : path;
+  const traversedPath = traversePath(obj, pathElements);
+
+  if (traversedPath.length - 1 != pathElements.length) {
     return undefined;
   }
   return traversedPath[traversedPath.length - 1]!.value;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const setValue = (obj: any, path: string, value: any) => {
-  const parts = splitPath(path);
-  const traversedPath = traversePath(obj, parts);
+export const setValue = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let parentObj: any;
-  if (traversedPath.length < parts.length - 1) {
-    if (
-      parts.find((e: PathElement) => {
-        return e.identifier;
-      })
-    ) {
-      throw Error("cannot create new array field");
-    }
-    let currentObj =
-      traversedPath.length > 0
-        ? traversedPath[traversedPath.length - 1]!.value
-        : obj;
-    for (let i = traversedPath.length; i < parts.length - 1; i++) {
-      currentObj[parts[i]!.name] = {};
-      currentObj = currentObj[parts[i]!.name];
-    }
-    parentObj = currentObj;
-  } else {
-    parentObj =
-      traversedPath.length > 1
-        ? traversedPath[traversedPath.length - 2]!.value
-        : obj;
+  obj: any,
+  path: string | PathElement[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any,
+) => {
+  const pathElements = typeof path == "string" ? splitPath(path) : path;
+  const traversedPath = traversePath(obj, pathElements, true);
+  if (traversedPath.length - 1 != pathElements.length) {
+    throw Error("error");
   }
-
-  const lastPart = parts[parts.length - 1]!;
-  if (lastPart.identifier === undefined) {
-    parentObj[lastPart.name] = value;
+  const parentNode = traversedPath[traversedPath.length - 2]!.value;
+  const lastPart = pathElements[pathElements.length - 1]!;
+  if (lastPart.index === undefined) {
+    setValueOn(parentNode, lastPart.name, value);
   } else {
-    const element = parentObj[lastPart.name];
-    if (Array.isArray(element)) {
-      const index = Number.parseInt(lastPart.identifier, 10);
-      if (!Number.isNaN(index)) {
-        element[index] = value;
-      }
-    } else if (element instanceof Map) {
-      element.set(lastPart.identifier, value);
-    } else {
-      throw Error("unknown element container");
-    }
+    setValueOn(parentNode, lastPart.name, value, lastPart.index);
   }
 };
 
-interface PathElement {
+function setValueOn(
+  parentNode: AnyObject,
+  fieldName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any,
+  index: number | undefined = undefined,
+) {
+  if (index === undefined) {
+    if (parentNode instanceof Map) {
+      parentNode.set(fieldName, value);
+    } else {
+      parentNode[fieldName] = value;
+    }
+  } else {
+    const container = parentNode[fieldName];
+    if (Array.isArray(container)) {
+      container[index] = value;
+    } else {
+      throw Error(
+        "invalid container type: expected array got " + typeof container,
+      );
+    }
+  }
+}
+
+export class PathElement {
   name: string;
-  identifier?: string | undefined;
+  index?: number | undefined;
+  constructor(name: string, index: number | undefined = undefined) {
+    this.name = name;
+    this.index = index;
+  }
 }
 
 export const splitPath = (path: string): PathElement[] => {
-  if (typeof path !== "string") {
-    return [];
-  }
   const parts: PathElement[] = [];
   let currentPart = "";
-  let identifierStart = -1;
-  let currentIdentifier: string | undefined = undefined;
+  let isInString = false;
+  let isInBrackets = false;
+  let indexStr = "";
   for (let i = 0; i < path.length; i++) {
-    const c = path[i];
-    if (c == "." && identifierStart == -1) {
-      parts.push({ name: currentPart, identifier: currentIdentifier });
-      currentPart = "";
-      currentIdentifier = undefined;
-      continue;
-    } else if (c == "[") {
-      if (identifierStart > -1) {
-        throw Error(
-          "found unexpected identifier start at: " +
-            i +
-            ". Previous started at: " +
-            identifierStart,
-        );
+    const c = path[i]!;
+    switch (c) {
+      case ".": {
+        if (isInString) {
+          currentPart += c;
+        } else {
+          const index = indexStr ? Number.parseInt(indexStr!, 10) : undefined;
+          parts.push(
+            new PathElement(
+              currentPart,
+              index !== undefined && !Number.isNaN(index) ? index : undefined,
+            ),
+          );
+          currentPart = "";
+          indexStr = "";
+        }
+        break;
       }
-      identifierStart = i;
-      continue;
-    } else if (c == "]") {
-      if (identifierStart == -1) {
-        throw Error("found unexpected identifier end at: " + i);
+      case "[": {
+        if (isInBrackets) {
+          throw Error(`another start of brackets at: ${i}`);
+        }
+        isInBrackets = true;
+        break;
       }
-      identifierStart = -1;
-      continue;
-    } else if (identifierStart != -1) {
-      currentIdentifier = currentIdentifier ? currentIdentifier + c : c;
-      continue;
+      case "]": {
+        if (!isInBrackets) {
+          throw Error(`invalid character at: ${i}`);
+        }
+        isInBrackets = false;
+        break;
+      }
+      case '"': {
+        if (isInString) {
+          if (currentPart.length === 0) {
+            throw Error(`invalid string at: ${i}`);
+          }
+        }
+        isInString = !isInString;
+        break;
+      }
+      default: {
+        if (!isAlphaNumeric(c) && c != "-") {
+          throw Error(`invalid character '${c}' at: ${i}`);
+        }
+        if (isInBrackets) {
+          indexStr += c;
+        } else {
+          currentPart += c;
+        }
+      }
     }
-    currentPart += c;
   }
-  parts.push({ name: currentPart, identifier: currentIdentifier });
+  if (currentPart.length > 0) {
+    const index = indexStr ? Number.parseInt(indexStr!, 10) : undefined;
+    parts.push(
+      new PathElement(
+        currentPart,
+        index !== undefined && !Number.isNaN(index) ? index : undefined,
+      ),
+    );
+  }
   return parts;
 };
 
-interface TraversedPathElement extends PathElement {
+export class TraversedPathElement extends PathElement {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
+  constructor(
+    element: PathElement,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any = undefined,
+  ) {
+    super(element.name, element.index);
+    this.value = value;
+  }
 }
 
-const traversePath = (
+export const traversePath = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: any,
   path: PathElement[],
+  createMissingElements: boolean = false,
 ): TraversedPathElement[] => {
   const traversedPath: TraversedPathElement[] = [];
   if (!obj) {
     return traversedPath;
   }
-  let currentObj = obj;
-  for (const element of path) {
-    const partObj = currentObj[element.name];
-    if (partObj === undefined) {
-      break;
-    }
-    if (element.identifier !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let elementObj: any = undefined;
-      if (Array.isArray(partObj)) {
-        const index = Number.parseInt(element.identifier, 10);
-        if (!Number.isNaN(index)) {
-          elementObj = partObj[index];
-        }
-      } else if (partObj instanceof Map) {
-        elementObj = partObj.get(element.identifier);
+  let parentObj = obj;
+  traversedPath.push(new TraversedPathElement(new PathElement("."), parentObj));
+  for (const pathElement of path) {
+    let currentObj = pathElement.name
+      ? parentObj instanceof Map
+        ? parentObj.get(pathElement.name)
+        : parentObj[pathElement.name]
+      : parentObj;
+    if (currentObj === undefined) {
+      if (!createMissingElements || !pathElement.name) {
+        break;
       }
+      currentObj =
+        pathElement.index !== undefined
+          ? new Array(pathElement.index! + 1)
+          : {};
+      parentObj[pathElement.name] = currentObj;
+    }
+    if (pathElement.index !== undefined) {
+      if (
+        currentObj[pathElement.index!] === undefined &&
+        createMissingElements
+      ) {
+        currentObj[pathElement.index!] = {};
+      }
+      const elementObj = currentObj[pathElement.index!];
       if (elementObj === undefined) {
         break;
       }
       currentObj = elementObj;
-    } else {
-      currentObj = partObj;
     }
-    traversedPath.push({ ...element, value: currentObj });
+    parentObj = currentObj;
+    traversedPath.push(new TraversedPathElement(pathElement, parentObj));
   }
   return traversedPath;
 };

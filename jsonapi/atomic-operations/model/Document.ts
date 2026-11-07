@@ -1,20 +1,23 @@
 import type {
+  DocumentObject,
   Errors,
-  Links,
+  ImplementationInfo,
   MetaObject,
-  PaginationLinks,
   PrimaryData,
   ResourceIdentifierObject,
 } from "@jsonapi/model";
 
 export type OperationType = "add" | "update" | "remove";
 
-export interface AtomicOperationsDocument {
-  "atomic:operations"?: Operation[];
+export interface AtomicOperationsDocument extends DocumentObject {
+  "atomic:operations": Operation[];
+  jsonapi?: ImplementationInfo | undefined;
+}
+
+export interface AtomicResultsDocument extends DocumentObject {
   "atomic:results"?: Result[];
-  links?: Links | PaginationLinks;
-  meta?: MetaObject;
-  errors?: Errors;
+  jsonapi?: ImplementationInfo | undefined;
+  errors?: Errors | undefined;
 }
 
 export interface Operation {

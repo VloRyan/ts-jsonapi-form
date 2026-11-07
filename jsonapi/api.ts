@@ -1,53 +1,32 @@
 import {
   ApiError,
   type Document as APIDocument,
-  type Included,
-  isSameId,
-  type ObjectLike,
-  type ResourceIdentifierObject,
+  type ErrorObject,
 } from "@jsonapi/model";
 import { StatusCodes } from "http-status-codes";
-
-export const MEDIA_TYPE = "application/vnd.api+json";
-
-export interface FetchOpts {
-  page: Page | undefined;
-  filter: ObjectLike | undefined;
-  includes: string[] | undefined;
-  sort: string | undefined;
-}
-export const EmptyFetchOpts: FetchOpts = {
-  page: undefined,
-  filter: undefined,
-  includes: undefined,
-  sort: undefined,
-};
-
-export interface Page {
-  limit: number | undefined;
-  offset: number | undefined;
-}
+import { type FetchOpts, JSONAPI_MEDIA_TYPE } from "@jsonapi/model/Request";
 
 async function callApi(method: string, url: string, body?: APIDocument) {
   return fetch(url, {
     method: method,
     headers: {
-      "Content-Type": MEDIA_TYPE,
+      "Content-Type": JSONAPI_MEDIA_TYPE,
     },
     body: body ? JSON.stringify(body) : null,
   }).then(async (resp) => {
     if (resp.status == StatusCodes.NO_CONTENT) {
       return null;
     }
-    if (!resp.headers.get("content-type")?.startsWith(MEDIA_TYPE)) {
-      throw InvalidServerResponseError(resp);
+    if (!resp.headers.get("Content-Type")?.startsWith(JSONAPI_MEDIA_TYPE)) {
+      throw newInvalidServerResponseError(resp);
     }
     const doc = (await resp.json()) as APIDocument;
+    if (doc.data && doc.errors) {
+      throw newDataAndErrorsError(resp);
+    }
     if (!resp.ok) {
       if (!doc.errors) {
-        throw new Error(
-          "Unknown server error: " + resp.status + " - " + resp.statusText,
-        );
+        throw newInvalidServerResponseError(resp);
       }
       throw new ApiError(doc.errors);
     }
@@ -104,24 +83,23 @@ function pushObject(arr: Array<string>, obj: any, name: string) {
   }
 }
 
-export function InvalidServerResponseError(response: Response) {
-  return new ApiError([
-    {
-      title:
-        "Invalid server response: [" +
-        response.status +
-        "] - " +
-        response.statusText,
-      detail: "Header: " + JSON.stringify(response.headers.entries()),
-    },
-  ]);
+export function newInvalidServerResponseError(response: Response) {
+  const headers = JSON.stringify(response.headers.entries());
+  const apiError: ErrorObject = {
+    title: `Invalid server response: ${response.status} - ${response.statusText}`,
+    status: response.status.toString(),
+  };
+  if (headers) {
+    apiError.detail = `Headers: ${headers}`;
+  }
+  return new ApiError([apiError]);
 }
 
-export function findInclude(id: ResourceIdentifierObject, includes: Included) {
-  for (const obj of includes) {
-    if (isSameId(obj, id)) {
-      return obj;
-    }
-  }
-  return null;
+export function newDataAndErrorsError(response: Response) {
+  return new ApiError([
+    {
+      title: `Server returned data and errors`,
+      status: response.status.toString(),
+    },
+  ]);
 }

@@ -1,1 +1,1 @@
-export * from "./AtomicOperationsApi";
+export * from "./api";

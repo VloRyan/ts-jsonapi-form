@@ -7,7 +7,9 @@ export interface PageMetaData {
   total: number;
 }
 
-export function extractPaginationMetaData(doc: Document | null) {
+export function extractPaginationMetaData(
+  doc: Document | null,
+): PageMetaData | undefined {
   if (!doc || !doc.meta) {
     return undefined;
   }

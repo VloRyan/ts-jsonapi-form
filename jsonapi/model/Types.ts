@@ -1,12 +1,16 @@
-export type Primitive = string | number | boolean | null;
+export type Primitive = string | number | boolean;
 
+export interface AnyObject {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [member: string]: any;
+}
 export interface ObjectLike {
-  [member: string]: Value;
+  [member: string]: AttributeValue;
 }
 
-export type Arr = Array<Value>;
+export type Arr = Array<AttributeValue>;
 
-export type Value = Primitive | ObjectLike | Arr | undefined | null;
+export type AttributeValue = Primitive | ObjectLike | Arr | undefined | null;
 
 export type MetaObject = ObjectLike;
 

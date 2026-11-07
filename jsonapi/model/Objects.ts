@@ -1,61 +1,35 @@
-import type {
-  Links,
-  LinksObject,
-  MetaObject,
-  ObjectLike,
-  Value,
-} from "@jsonapi/model";
+import type { LinksObject, MetaObject, AttributeValue } from "@jsonapi/model";
 
 export interface ResourceIdentifierObject {
-  id: string;
+  id?: string | undefined;
   type: string;
-  lid: string | undefined;
+  lid?: string | undefined;
+  meta?: MetaObject | undefined;
+}
+export type ResourceLinkage =
+  ResourceIdentifierObject | ResourceIdentifierObject[] | null;
+
+export interface DocumentObject {
+  meta?: MetaObject | undefined;
+  links?: LinksObject | undefined;
 }
 
-export type ResourceLinkage =
-  null | never[] | ResourceIdentifierObject | ResourceIdentifierObject[];
-
-export interface RelationshipObject {
+export interface RelationshipObject extends DocumentObject {
   data: ResourceLinkage;
-  meta?: MetaObject;
-  links?: Links;
 }
 
 export interface RelationshipsObject {
   [k: string]: RelationshipObject;
 }
 
-export interface ResourceObject {
-  id: string;
-  type: string;
-  lid: string | undefined;
+export interface ResourceObject
+  extends ResourceIdentifierObject, DocumentObject {
   attributes?: AttributesObject;
   relationships?: RelationshipsObject;
-  links?: LinksObject;
-  meta?: MetaObject;
-}
-
-export function isResourceObject(obj: ObjectLike) {
-  return (
-    obj &&
-    obj["type"] !== undefined &&
-    (obj["id"] !== undefined || obj["lid"] !== undefined)
-  );
-}
-
-export function isSameId(
-  a: ResourceObject | ResourceIdentifierObject,
-  b: ResourceObject | ResourceIdentifierObject,
-) {
-  return a.type === b.type && a.id === b.id && a.lid === b.lid;
-}
-
-export function toResourceIdentifier(
-  obj: ResourceObject,
-): ResourceIdentifierObject {
-  return { id: obj.id, type: obj.type, lid: obj.lid };
 }
 
 export type AttributesObject<
-  ATTRS extends { [k: string]: Value } = { [k: string]: Value },
+  ATTRS extends { [k: string]: AttributeValue } = {
+    [k: string]: AttributeValue;
+  },
 > = { [K in keyof ATTRS]: ATTRS[K] };

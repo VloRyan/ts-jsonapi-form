@@ -1,5 +1,5 @@
 import { getValue, setValue } from "@functions/object";
-import type { ObjectLike } from "@jsonapi/model";
+import type { AnyObject } from "@jsonapi/model";
 
 export type FormControlElement =
   HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -8,19 +8,18 @@ export type SetableValue =
   | string
   | number
   | boolean
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  | Map<any, any>
-  | ObjectLike
+  | AnyObject
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | any[]
   | Date
   | undefined
   | null;
 
-export interface ObjectForm<T> {
+export interface ObjectForm<T extends AnyObject> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue(path: string): any;
-  setValue(path: string, value: SetableValue): void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  setValue(path: string, value: any): void;
   handleChangeEvent(event: Event): void;
   handleChange(element: HTMLInputElement): void;
   handleSubmit(e: Event): void;
@@ -44,7 +43,7 @@ export interface SingleObjectFormProps<T> {
   onSubmit?: (object: T) => void;
 }
 
-export class SingleObjectForm<T> implements ObjectForm<T> {
+export class SingleObjectForm<T extends AnyObject> implements ObjectForm<T> {
   object: T | null;
   id: string | undefined;
   protected readonly onSubmit: ((object: T) => void) | undefined;
@@ -138,13 +137,13 @@ export class SingleObjectForm<T> implements ObjectForm<T> {
   }
 }
 
-export interface OffsetFormProps<T> {
+export interface OffsetFormProps<T extends AnyObject> {
   form: ObjectForm<T>;
   offset: string;
   id?: string;
 }
 
-export class PathOffsetForm<T> implements ObjectForm<T> {
+export class PathOffsetForm<T extends AnyObject> implements ObjectForm<T> {
   private readonly form: ObjectForm<T>;
   private readonly offset: string;
   private readonly id: string | undefined;

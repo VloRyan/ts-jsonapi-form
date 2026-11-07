@@ -1,10 +1,5 @@
 import type { Link } from "@jsonapi/model";
 
-export interface Links {
-  self?: Link;
-  related?: Link;
-}
-
 export type LinksObject<
   ATTRS extends { [k: string]: Link } = { [k: string]: Link },
 > = { [K in keyof ATTRS]: ATTRS[K] };

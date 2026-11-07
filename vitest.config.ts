@@ -1,5 +1,5 @@
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths"; // <—- import this
+import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   test: {

@@ -34,7 +34,7 @@ you can do the following
 ```ts
 import { fetchResource } from "ts-jsonapi-form/jsonapi/JsonApi";
 
-fetchResource("http://example.com/articles", {
+fetchResource("https://example.com/articles", {
   filter: { name: "ts-jsonapi-form" },
   includes: ["comments"],
 })
@@ -50,7 +50,7 @@ This allows you to build dynamic, API-driven forms and interfaces with minimal b
 
 ### Handle the document
 
-For handling the document structure create a DocumentForm to have a simple access to the structure (attributes,
+For handling the document structure create a DocumentForm to have simple access to the structure (attributes,
 relationships, includes) of the document.
 
 Provided the following document (source: [jsonapi.org](https://jsonapi.org/))
@@ -67,8 +67,8 @@ Provided the following document (source: [jsonapi.org](https://jsonapi.org/))
       "relationships": {
         "author": {
           "links": {
-            "self": "http://example.com/articles/1/relationships/author",
-            "related": "http://example.com/articles/1/author"
+            "self": "https://example.com/articles/1/relationships/author",
+            "related": "https://example.com/articles/1/author"
           },
           "data": {
             "type": "people",
@@ -127,11 +127,15 @@ import { DocumentForm } from "@vloryan/ts-jsonapi-form/form";
 function printDocument(doc: SingleResourceDoc) {
   const form = new DocumentForm(doc);
 
-  console.log("ID: " + form.getValue("id"))
-  console.log("Title: " + form.getValue("title"))
+  console.log("ID: " + form.getValue("id")) // ID: 1
+  console.log("Title: " + form.getValue("title")) // Title: JSON:API paints my bikeshed!
 
-  const author = form.getValue("author") // direct get the object from document.included...
-  console.log("Author name: " + author.firstname + " " + form.getValue("author.lastName")); //... attributes by path
+  console.log("Author id: " + form.getValue("author.id")); // get value from relationship
+  console.log("Author firstname: " + form.getValue("author.firstname")); // get value from included resource object
+
+  const authorObject = form.getValue("author") // or get the whole resource object from included
+  const author = new ResourceObjectAccessor(authorObject); // ... wrap it in accessor for easier usage
+  console.log(`Author: ${author.getId()} - ${author.getAttribute("firstname")} ${author.getAttribute("lastname")}`);
 
   console.log("Second comment: " + form.getValue("comments[1].body")); // arrays the also supported
 

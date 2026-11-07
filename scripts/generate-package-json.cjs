@@ -9,7 +9,6 @@ packageJsonTemplate.dependencies = packageJson.dependencies;
 const jsonData = JSON.stringify(packageJsonTemplate, null, 2);
 try {
   fs.writeFileSync(__dirname + "/../dist/package.json", jsonData);
-  // file written successfully
 } catch (err) {
   console.error(err);
 }

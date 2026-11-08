@@ -1,26 +1,33 @@
 import {
+  type AnyObject,
   type ResourceIdentifierObject,
+  type ResourceLinkage,
   type ResourceObject,
   type SingleResourceDoc,
 } from "@jsonapi/model";
 
 import { ResourceObjectAccessor } from "@form/ResourceObjectAccessor";
-import { isSameId } from "@functions/resource-object";
+import {
+  isBaseMember,
+  isResourceObject,
+  isSameId,
+} from "@functions/resource-object";
 import { DocumentObjectAccessor } from "@form/DocumentObjectAccessor";
 import { RelationshipObjectAccessor } from "@form/RelationshipObjectAccessor";
+import { getValue, PathElement, splitPath } from "@functions";
 
 export class SingleResourceDocumentAccessor extends DocumentObjectAccessor<SingleResourceDoc> {
   private readonly document: SingleResourceDoc;
-  private objectAccessor: ResourceObjectAccessor;
+  private dataAccessor: ResourceObjectAccessor;
 
   constructor(document: SingleResourceDoc) {
     super(document);
     this.document = document;
-    this.objectAccessor = new ResourceObjectAccessor(document.data);
+    this.dataAccessor = new ResourceObjectAccessor(document.data);
   }
 
   public getData(): ResourceObjectAccessor {
-    return this.objectAccessor;
+    return this.dataAccessor;
   }
 
   public setData(data: ResourceObject) {
@@ -28,8 +35,91 @@ export class SingleResourceDocumentAccessor extends DocumentObjectAccessor<Singl
       return;
     }
     this.document.data = data;
-    this.objectAccessor = new ResourceObjectAccessor(this.document.data);
+    this.dataAccessor = new ResourceObjectAccessor(this.document.data);
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getResourceObjectField(path: string): any {
+    if (this.dataAccessor.isNull()) {
+      return undefined;
+    }
+    const pathElements = splitPath(path);
+    const linkage = this.dataAccessor.getField(
+      [pathElements[0]!],
+      "relationship",
+    ) as ResourceLinkage | undefined;
+    if (linkage) {
+      if (pathElements.length == 1) {
+        return Array.isArray(linkage)
+          ? linkage.map((e) => this.findInclude(e) ?? e)
+          : (this.findInclude(linkage) ?? linkage);
+      }
+      if (Array.isArray(linkage)) {
+        return undefined;
+      }
+      const resolved = this.findInclude(linkage);
+      return resolved
+        ? new ResourceObjectAccessor(resolved).getAttribute(
+            pathElements.toSpliced(0, 1),
+          )
+        : getValue(linkage, pathElements.toSpliced(0, 1));
+    }
+
+    return this.dataAccessor.getAttribute(pathElements);
+  }
+
+  public setResourceObjectField = (
+    path: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+  ) => {
+    if (this.dataAccessor.isNull()) {
+      return;
+    }
+    const pathElements = splitPath(path);
+    if (pathElements.length == 0) {
+      return;
+    }
+    const existingRelationship = this.dataAccessor.getRelationship(
+      pathElements[0]!.name,
+    );
+    const isRelationshipUpdate =
+      existingRelationship || this.isResourceLinkage(value);
+    if (isRelationshipUpdate) {
+      if (existingRelationship == undefined && pathElements.length > 1) {
+        throw Error("can not create nested relationship");
+      }
+      if (
+        (pathElements.length == 1 && pathElements[0]!.index === undefined) ||
+        (pathElements.length == 2 && isBaseMember(pathElements[1]!.name))
+      ) {
+        const prevLinkage =
+          existingRelationship && !existingRelationship.isNull()
+            ? existingRelationship.getLinkage()
+            : undefined;
+        this.dataAccessor.setField(pathElements, value, "relationship");
+        if (value == null && pathElements.length == 1 && prevLinkage) {
+          if (Array.isArray(prevLinkage)) {
+            prevLinkage.forEach((l) => this.removeOrphanInclude(l));
+          } else {
+            this.removeOrphanInclude(prevLinkage);
+          }
+        }
+      } else if (existingRelationship) {
+        this.setIncludeAttribute(existingRelationship, pathElements, value);
+      }
+
+      if (value && this.isResourceLinkage(value)) {
+        if (Array.isArray(value)) {
+          value.forEach((v) => this.addOrUpdateInclude(v));
+        } else {
+          this.addOrUpdateInclude(value);
+        }
+      }
+      return;
+    }
+    this.dataAccessor.setAttribute(pathElements, value);
+  };
 
   public getIncludes() {
     if (!this.document) {
@@ -91,5 +181,32 @@ export class SingleResourceDocumentAccessor extends DocumentObjectAccessor<Singl
       }
     }
     return null;
+  }
+
+  private setIncludeAttribute(
+    relationship: RelationshipObjectAccessor,
+    pathElements: PathElement[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
+  ) {
+    const linkage = relationship.getLinkage(pathElements[0]!.index);
+    if (linkage != undefined && !Array.isArray(linkage)) {
+      const include = this.findInclude(linkage);
+      if (include) {
+        new ResourceObjectAccessor(include).setAttribute(
+          pathElements.toSpliced(0, 1),
+          value,
+        );
+      }
+    }
+  }
+
+  private isResourceLinkage(obj: AnyObject) {
+    if (!obj) {
+      return false;
+    }
+    return (
+      (Array.isArray(obj) && isResourceObject(obj[0])) || isResourceObject(obj)
+    );
   }
 }

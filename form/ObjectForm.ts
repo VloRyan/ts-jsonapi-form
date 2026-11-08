@@ -16,6 +16,7 @@ export type SetableValue =
   | null;
 
 export interface ObjectForm<T extends AnyObject> {
+  getObject(): T | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getValue(path: string): any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,6 +53,10 @@ export class SingleObjectForm<T extends AnyObject> implements ObjectForm<T> {
     this.id = props.id;
     this.object = props.object;
     this.onSubmit = props.onSubmit;
+  }
+
+  getObject(): T | null {
+    return this.object;
   }
 
   setup(): {
@@ -156,9 +161,15 @@ export class PathOffsetForm<T extends AnyObject> implements ObjectForm<T> {
     this.offset = props.offset;
     this.form = props.form;
   }
+
+  getObject(): T | null {
+    return this.form.getObject();
+  }
+
   isEmpty() {
     return this.form.isEmpty();
   }
+
   getValue(path: string) {
     if (!this.form) {
       return undefined;

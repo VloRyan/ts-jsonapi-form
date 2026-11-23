@@ -6,6 +6,7 @@ import {
   type ApiError,
   type FetchOpts,
   type SingleResourceDoc,
+  EmptyFetchOpts,
 } from "@jsonapi/model";
 
 describe("fetchResource", () => {
@@ -96,10 +97,7 @@ describe("buildQueryString", () => {
   test.each([
     [
       {
-        page: undefined,
-        filter: undefined,
-        includes: undefined,
-        sort: undefined,
+        ...EmptyFetchOpts,
       } satisfies FetchOpts,
       "",
     ],
@@ -108,9 +106,10 @@ describe("buildQueryString", () => {
         filter: { name: "test" },
         page: { offset: 1, limit: 10 },
         includes: ["success"],
-        sort: undefined,
+        sort: ["id", "-name"],
+        fields: { customType: ["id", "name"] },
       } satisfies FetchOpts,
-      "?page[offset]=1&page[limit]=10&filter[name]=test&include=success",
+      "?page[offset]=1&page[limit]=10&filter[name]=test&fields[customType]=id,name&include=success&sort=id,-name",
     ],
   ])("%o -> %s", (opts, expected) => {
     const got = buildQueryString(opts);

@@ -53,34 +53,46 @@ export async function updateResource(url: string, body: APIDocument) {
 export function buildQueryString(opts?: FetchOpts) {
   const query: string[] = [];
   if (opts != undefined) {
-    pushObject(query, opts.page, "page");
-    pushObject(query, opts.filter, "filter");
-    if (opts.includes != undefined) {
-      pushObject(query, opts.includes.join(","), "include");
-    }
-    if (opts.sort != undefined) {
-      pushObject(query, opts.sort, "sort");
-    }
+    addQueryParam(query, "page", opts.page);
+    addQueryParam(query, "filter", opts.filter);
+    addQueryParam(query, `fields`, opts.fields);
+    addQueryParam(query, "include", opts.includes);
+    addQueryParam(query, "sort", opts.sort);
   }
   return query.length > 0 ? "?" + query.join("&") : "";
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pushObject(arr: Array<string>, obj: any, name: string) {
-  if (obj == undefined || obj === "") {
+function addQueryParam(params: Array<string>, name: string, v: any) {
+  if (v === undefined || v === "") {
     return;
   }
-  if (typeof obj === "string" || obj instanceof String) {
-    arr.push(name + "=" + encodeURIComponent(obj as string));
-    return;
+  switch (typeof v) {
+    case "string":
+    case "boolean":
+    case "number":
+      params.push(`${name}=${encodeURIComponent(v)}`);
+      return;
+    case "object":
+      if (isArrayOfStrings(v)) {
+        params.push(`${name}=${v.map((e) => encodeURIComponent(e)).join(",")}`);
+        return;
+      }
+      if (name.endsWith("]")) {
+        // no sub members
+        return;
+      }
+      for (const key in v) {
+        addQueryParam(params, `${name}[${key}]`, v[key]);
+      }
+      break;
   }
-  for (const key in obj) {
-    const v = obj[key];
-    if (v == undefined) {
-      continue;
-    }
-    arr.push(name + "[" + key + "]=" + encodeURIComponent(v));
-  }
+}
+
+function isArrayOfStrings(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 }
 
 export function newInvalidServerResponseError(response: Response) {

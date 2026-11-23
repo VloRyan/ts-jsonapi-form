@@ -2,6 +2,7 @@ import { trimPrefix, trimSuffix } from "@functions/strings";
 import {
   type AttributeValue,
   type FetchOpts,
+  type FieldsType,
   type ObjectLike,
   type Page,
   type ResourceIdentifierObject,
@@ -183,13 +184,33 @@ export function extractPage(search: string): Page | undefined {
   return page;
 }
 
+export const extractFields = (search: string) => {
+  if (!search) {
+    return undefined;
+  }
+  const fields: FieldsType = {};
+  search
+    .split("&")
+    .filter((value) => value.startsWith("fields["))
+    .forEach((value) => {
+      const parts = value.split("=");
+      const typeName = parts[0]!.substring(
+        "fields[".length,
+        parts[0]!.length - 1,
+      );
+      fields[typeName] = parts[1]!.split(",");
+    });
+  return Object.keys(fields).length === 0 ? undefined : fields;
+};
+
 export const extractFetchOpts = (search: string, init?: FetchOpts) => {
   const urlParams = new URLSearchParams(search);
   const opts = {
     page: extractPage(search),
     filter: extractFilter(search),
-    sort: urlParams.get("sort"),
+    sort: urlParams.get("sort")?.split(","),
     includes: init?.includes,
+    fields: extractFields(search),
   } as FetchOpts;
   if (opts.page === undefined) {
     opts.page = init?.page;

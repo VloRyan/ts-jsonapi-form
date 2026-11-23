@@ -44,7 +44,6 @@ export class ResourceObjectAccessor extends DocumentObjectAccessor<ResourceObjec
     if (pathElements.length == 1 && isBaseMember(pathElements[0]!.name)) {
       return getValue(this.object, pathElements[0]!.name);
     }
-
     const traversedPath = traversePath(this.object.attributes, pathElements);
     if (traversedPath.length - 1 == pathElements.length) {
       return traversedPath[traversedPath.length - 1]!.value;
@@ -60,13 +59,14 @@ export class ResourceObjectAccessor extends DocumentObjectAccessor<ResourceObjec
       return;
     }
     const pathElements = typeof path == "string" ? splitPath(path) : path;
-    setValue(
-      pathElements.length == 1 && isBaseMember(pathElements[0]!.name)
-        ? this.object
-        : this.object.attributes,
-      pathElements,
-      value,
-    );
+    if (pathElements.length == 1 && isBaseMember(pathElements[0]!.name)) {
+      setValue(this.object, pathElements, value);
+    } else {
+      if (!this.object.attributes) {
+        this.object.attributes = {};
+      }
+      setValue(this.object.attributes, pathElements, value);
+    }
   };
 
   public getRelationship(name: string): RelationshipObjectAccessor | undefined {
